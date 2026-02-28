@@ -1,75 +1,144 @@
 import { useState, useRef, useEffect } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GÉNÉRATION SIMULÉE (Version démo sans API)
+// GROQ API INTEGRATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function generateSummary(text) {
-  await new Promise(r => setTimeout(r, 2000));
-  const words = text.split(' ').length;
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10).length;
+async function callGroq(systemPrompt, userMessage) {
+  const API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
   
-  return `📚 RÉSUMÉ AUTOMATIQUE
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile", // Modèle rapide et puissant
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      return `❌ Erreur ${response.status}: ${errorData.error?.message || 'Erreur API'}`;
+    }
+    
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0]?.message?.content) {
+      return data.choices[0].message.content.trim();
+    }
+    
+    return "Aucune réponse générée.";
+    
+  } catch (error) {
+    return `Erreur de connexion: ${error.message}`;
+  }
+}
 
-🎯 Points clés identifiés :
-- Document de ${words} mots analysé
-- ${sentences} phrases principales extraites
-- Concepts fondamentaux structurés
-- Informations essentielles organisées
-
-💡 Résumé :
-Le cours aborde des notions théoriques et pratiques essentielles. Les concepts sont présentés de façon progressive pour faciliter la compréhension et la mémorisation.
-
-✨ Version démo — IA complète bientôt disponible !`;
+// Fonctions de génération avec IA
+async function generateSummary(text) {
+  return await callGroq(
+    "Tu es un assistant pédagogique expert. Génère un résumé structuré et clair en français avec des sections et des points clés. Sois concis, pédagogique et bien organisé.",
+    `Résume ce cours de façon structurée :\n\n${text}`
+  );
 }
 
 async function generateQuiz(text) {
-  await new Promise(r => setTimeout(r, 2500));
+  const raw = await callGroq(
+    `Tu es un professeur expert. Génère exactement 5 questions QCM en français.
+Format strict :
+Q1: [question]
+A) [option] B) [option] C) [option] D) [option]
+Réponse: [A/B/C/D]
+Explication: [courte explication]
+
+Répète ce format pour Q2, Q3, Q4, Q5.`,
+    `Cours : ${text}`
+  );
   
-  return [
+  // Parse les questions
+  const questions = [];
+  const blocks = raw.split(/\n(?=Q\d+[:\.])/g);
+  
+  for (const block of blocks) {
+    const lines = block.trim().split('\n').filter(Boolean);
+    if (!lines.length) continue;
+    
+    const qMatch = lines[0].match(/Q\d+[:\.]?\s*(.+)/);
+    if (!qMatch) continue;
+    
+    const question = qMatch[1].trim();
+    const options = [];
+    let correct = 0;
+    let explanation = '';
+    
+    for (const line of lines.slice(1)) {
+      const o = line.match(/^([A-D])[)\.:\s]\s*(.+)/);
+      if (o) {
+        options.push(o[2].trim());
+        continue;
+      }
+      
+      const c = line.match(/R[ée]ponse\s*[:\-]\s*([A-D])/i);
+      if (c) {
+        correct = c[1].charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        continue;
+      }
+      
+      const e = line.match(/Explication\s*[:\-]\s*(.+)/i);
+      if (e) explanation = e[1].trim();
+    }
+    
+    if (options.length >= 2) {
+      questions.push({ question, options, correct, explanation });
+    }
+  }
+  
+  return questions.length > 0 ? questions : [
     {
-      question: "Quel est le sujet principal du cours ?",
-      options: ["Concept A", "Concept B", "Concept C", "Concept D"],
-      correct: 1,
-      explanation: "Le cours traite principalement du Concept B, comme expliqué dans la première partie."
-    },
-    {
-      question: "Quelle est la définition correcte ?",
-      options: ["Définition 1", "Définition 2", "Définition 3", "Définition 4"],
-      correct: 2,
-      explanation: "La définition correcte est la 3, selon le cours."
-    },
-    {
-      question: "Quelles sont les phases du processus ?",
-      options: ["2 phases", "3 phases", "4 phases", "5 phases"],
-      correct: 2,
-      explanation: "Le processus comporte 4 phases principales."
-    },
-    {
-      question: "Quelle est l'application pratique ?",
-      options: ["Application A", "Application B", "Application C", "Application D"],
+      question: "Question basée sur le cours",
+      options: ["Option A", "Option B", "Option C", "Option D"],
       correct: 0,
-      explanation: "L'application principale est A, comme mentionné."
-    },
-    {
-      question: "Quel est l'élément clé à retenir ?",
-      options: ["Élément 1", "Élément 2", "Élément 3", "Élément 4"],
-      correct: 1,
-      explanation: "L'élément clé est le 2, essentiel pour la compréhension."
+      explanation: "Explication de la réponse correcte."
     }
   ];
 }
 
 async function generateCards(text) {
-  await new Promise(r => setTimeout(r, 2000));
+  const raw = await callGroq(
+    `Génère exactement 6 fiches de révision en français.
+Format strict :
+1. [Concept clé]
+Réponse: [explication courte et claire]
+
+Répète pour 2, 3, 4, 5, 6.`,
+    `Cours : ${text}`
+  );
   
-  return [
-    { front: "Concept principal", back: "Définition et explication du concept principal abordé dans le cours." },
-    { front: "Première notion clé", back: "Description détaillée de la première notion importante à retenir." },
-    { front: "Deuxième notion clé", back: "Explication de la deuxième notion essentielle du cours." },
-    { front: "Application pratique", back: "Comment appliquer concrètement les connaissances du cours." },
-    { front: "Formule importante", back: "Formule ou principe clé à mémoriser pour les examens." },
-    { front: "Point de synthèse", back: "Résumé global des éléments essentiels à retenir." }
+  const cards = [];
+  const blocks = raw.split(/\n(?=\d+[\.:])/g);
+  
+  for (const block of blocks) {
+    const lines = block.trim().split('\n').filter(Boolean);
+    if (lines.length < 2) continue;
+    
+    const front = lines[0].replace(/^\d+[\.:\s]+/, '').trim();
+    const back = lines.slice(1).join(' ').replace(/^[Rr][ée]ponse[:\s-]+/, '').trim();
+    
+    if (front && back) cards.push({ front, back });
+  }
+  
+  return cards.length > 0 ? cards : [
+    { front: "Concept 1", back: "Explication du concept 1" },
+    { front: "Concept 2", back: "Explication du concept 2" }
   ];
 }
 
@@ -102,7 +171,7 @@ function SummaryScreen() {
   return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📄 Résumé IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Colle ton cours, l'IA le résume</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Colle ton cours, l'IA le résume avec Groq</p>
       
       <textarea 
         style={{width: '100%', minHeight: 120, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none', resize: 'vertical'}}
@@ -118,14 +187,14 @@ function SummaryScreen() {
       </div>
       
       <button onClick={go} disabled={loading || !text.trim()} style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1}}>
-        {loading ? "⏳ Génération…" : "✨ Générer le résumé"}
+        {loading ? "⏳ IA Groq analyse…" : "✨ Générer le résumé IA"}
       </button>
       
-      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Analyse en cours...</div>}
+      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq AI analyse votre cours...</div>}
       
       {result && (
         <div style={{marginTop: 20, padding: 20, borderRadius: 16, background: '#0e0e1d', border: '1px solid #333'}}>
-          <div style={{fontSize: 11, color: '#6C5CE7', fontWeight: 700, marginBottom: 12, textTransform: 'uppercase'}}>✦ Résumé généré</div>
+          <div style={{fontSize: 11, color: '#6C5CE7', fontWeight: 700, marginBottom: 12, textTransform: 'uppercase'}}>✦ Résumé généré par Groq AI</div>
           <div style={{fontSize: 14, lineHeight: 1.8, color: '#e8e8f8', whiteSpace: 'pre-wrap'}}>{result}</div>
         </div>
       )}
@@ -134,7 +203,7 @@ function SummaryScreen() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ÉCRAN QUIZ
+// ÉCRAN QUIZ (même structure qu'avant mais avec vraie IA)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function QuizScreen() {
@@ -143,7 +212,7 @@ function QuizScreen() {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
-  const [phase, setPhase] = useState('input'); // input | playing | done
+  const [phase, setPhase] = useState('input');
   const [loading, setLoading] = useState(false);
 
   const generate = async () => {
@@ -170,13 +239,13 @@ function QuizScreen() {
   if (phase === 'input') return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>🧩 Quiz IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Génère 5 QCM automatiques</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Groq génère 5 QCM automatiques</p>
       <textarea style={{width: '100%', minHeight: 120, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}} placeholder="Colle ton cours…" value={text} onChange={e => setText(e.target.value)}/>
       <div style={{display: 'flex', gap: 8, marginTop: 12}}>
         {[["🧬 Bio", SAMPLES.bio], ["🏛️ Hist", SAMPLES.hist]].map(([l,s]) => <button key={l} onClick={() => setText(s)} style={{padding: '7px 14px', borderRadius: 20, border: '1px solid #444', background: '#1a1a2e', color: '#888', cursor: 'pointer', fontSize: 12}}>{l}</button>)}
       </div>
-      <button onClick={generate} disabled={loading || !text.trim()} style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>{loading ? "⏳ Génération…" : "🧩 Générer le quiz"}</button>
-      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Création du quiz...</div>}
+      <button onClick={generate} disabled={loading || !text.trim()} style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>{loading ? "⏳ IA génère…" : "🧩 Générer le quiz IA"}</button>
+      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq crée vos questions...</div>}
     </div>
   );
 
@@ -197,7 +266,7 @@ function QuizScreen() {
     <div style={{padding: 20}}>
       <div style={{background: '#0e0e1d', border: '1px solid #333', borderRadius: 16, overflow: 'hidden'}}>
         <div style={{padding: '14px 18px', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between'}}>
-          <span style={{fontWeight: 700, fontSize: 14}}>Quiz</span>
+          <span style={{fontWeight: 700, fontSize: 14}}>Quiz IA</span>
           <span style={{background: 'rgba(0,206,201,0.12)', color: '#00cec9', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700}}>✦ {score}/{questions.length}</span>
         </div>
         <div style={{height: 3, background: '#1a1a2e'}}>
@@ -236,11 +305,11 @@ function QuizScreen() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ÉCRAN CHAT
+// ÉCRAN CHAT (avec vraie IA conversationnelle)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function ChatScreen() {
-  const [messages, setMessages] = useState([{role: 'ai', text: "Bonjour ! 👋 Je suis ton assistant StudyMind AI. Pose-moi n'importe quelle question sur tes cours !"}]);
+  const [messages, setMessages] = useState([{role: 'ai', text: "Bonjour ! 👋 Je suis ton assistant StudyMind AI propulsé par Groq. Pose-moi n'importe quelle question sur tes cours !"}]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -253,8 +322,12 @@ function ChatScreen() {
     setInput('');
     setMessages(m => [...m, {role: 'user', text: q}]);
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    const reply = `Bonne question ! Voici ce que je peux te dire : ${q.includes('?') ? 'La réponse dépend du contexte du cours.' : 'C\'est un sujet intéressant.'} N'hésite pas à me poser d'autres questions !`;
+    
+    const reply = await callGroq(
+      "Tu es StudyMind AI, un assistant scolaire bienveillant et expert. Réponds en français, de façon claire, pédagogique et encourageante. Utilise des analogies et exemples concrets. Sois concis.",
+      q
+    );
+    
     setMessages(m => [...m, {role: 'ai', text: reply}]);
     setLoading(false);
   };
@@ -264,7 +337,7 @@ function ChatScreen() {
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)', padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>💬 Chat IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Discute avec l'assistant IA</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Discute avec Groq AI</p>
       
       <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', paddingBottom: 12}}>
         {messages.map((m, i) => (
@@ -288,7 +361,7 @@ function ChatScreen() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ÉCRAN FICHES
+// ÉCRAN FICHES (avec vraie IA)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function CardsScreen() {
@@ -306,13 +379,13 @@ function CardsScreen() {
   return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📋 Fiches IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Génère 6 fiches de révision</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Groq génère 6 fiches de révision</p>
       <textarea style={{width: '100%', minHeight: 100, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}} placeholder="Colle ton cours…" value={text} onChange={e => setText(e.target.value)}/>
       <div style={{display: 'flex', gap: 8, marginTop: 12}}>
         {[["🧬 Bio", SAMPLES.bio], ["🏛️ Hist", SAMPLES.hist]].map(([l,s]) => <button key={l} onClick={() => setText(s)} style={{padding: '7px 14px', borderRadius: 20, border: '1px solid #444', background: '#1a1a2e', color: '#888', cursor: 'pointer', fontSize: 12}}>{l}</button>)}
       </div>
-      <button onClick={generate} disabled={loading || !text.trim()} style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>{loading ? "⏳ Génération…" : "📋 Générer les fiches"}</button>
-      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Création des fiches...</div>}
+      <button onClick={generate} disabled={loading || !text.trim()} style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>{loading ? "⏳ IA génère…" : "📋 Générer les fiches IA"}</button>
+      {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq crée vos fiches...</div>}
       {cards.length > 0 && (
         <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16}}>
           {cards.map((c, i) => (
@@ -331,13 +404,12 @@ function CardsScreen() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ÉCRAN PLANNING
+// ÉCRAN PLANNING (garde la version simulée pour l'instant)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PlanningScreen() {
   const [subjects, setSubjects] = useState([{name: "Mathématiques"}, {name: "Histoire"}]);
   const [newSubj, setNewSubj] = useState('');
-  const [examDate, setExamDate] = useState('');
   const [sessions, setSessions] = useState([]);
   const [phase, setPhase] = useState('setup');
 
@@ -357,7 +429,7 @@ function PlanningScreen() {
   if (phase === 'setup') return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📅 Planning IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Crée ton planning de révisions</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Crée ton planning (IA bientôt)</p>
       
       <div style={{marginBottom: 16}}>
         <div style={{fontSize: 11, color: '#888', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase'}}>Tes matières</div>
@@ -373,11 +445,6 @@ function PlanningScreen() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div style={{marginBottom: 16}}>
-        <div style={{fontSize: 11, color: '#888', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase'}}>Date d'examen (optionnel)</div>
-        <input type="date" style={{width: '100%', background: '#1a1a2e', border: '1px solid #333', borderRadius: 11, padding: '10px 13px', color: '#fff', fontSize: 13, outline: 'none'}} value={examDate} onChange={e => setExamDate(e.target.value)}/>
       </div>
 
       <button onClick={generate} disabled={!subjects.length} style={{width: '100%', padding: 16, borderRadius: 14, border: 'none', background: !subjects.length ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: !subjects.length ? 'not-allowed' : 'pointer'}}>📅 Générer mon planning</button>
@@ -447,7 +514,7 @@ export default function App() {
           <div style={{width: 40, height: 40, background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 16px rgba(108,92,231,0.4)'}}>🧠</div>
           <div style={{fontWeight: 800, fontSize: 19, letterSpacing: '-0.4px'}}>Study<span style={{color: '#6C5CE7'}}>Mind</span> AI</div>
         </div>
-        <div style={{background: 'linear-gradient(135deg, rgba(108,92,231,0.15), rgba(253,121,168,0.1))', border: '1px solid rgba(108,92,231,0.3)', padding: '6px 14px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: '#6C5CE7', display: 'flex', alignItems: 'center', gap: 6}}>🚀 <span>Beta</span></div>
+        <div style={{background: 'linear-gradient(135deg, rgba(108,92,231,0.15), rgba(253,121,168,0.1))', border: '1px solid rgba(108,92,231,0.3)', padding: '6px 14px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: '#6C5CE7', display: 'flex', alignItems: 'center', gap: 6}}>⚡ <span>Groq AI</span></div>
       </div>
 
       <div style={{display: 'flex', padding: '12px 16px', gap: 6, borderBottom: '1px solid rgba(108,92,231,0.1)', overflowX: 'auto', background: 'rgba(7,7,15,0.95)', backdropFilter: 'blur(12px)'}}>
