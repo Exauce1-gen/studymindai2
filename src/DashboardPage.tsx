@@ -1,4 +1,5 @@
 import { useAuth } from './AuthContext';
+import AdBanner, { AdSlots } from './AdBanner';
 
 interface DashboardPageProps {
   onStartLearning: () => void;
@@ -145,6 +146,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             <div style={{fontSize: 13, color: '#888'}}>Série active</div>
           </div>
         </div>
+
+        {/* Publicité AdSense */}
+        <AdBanner slot={AdSlots.DASHBOARD_TOP} format="horizontal" />
 
         {/* Main CTA */}
         <div style={{
