@@ -419,12 +419,30 @@ function ExamScreen() {
       alert("Entre le sujet ET colle ton cours"); 
       return; 
     }
-    setLoading(true); 
-    setExam(''); 
-    setShowSolution(false);
-    const e = await generateExam(text, subject);
-    setExam(e); 
-    setLoading(false);
+    
+    try {
+      setLoading(true); 
+      setExam(''); 
+      setShowSolution(false);
+      
+      console.log('Génération examen...', { subject, textLength: text.length });
+      
+      const e = await generateExam(text, subject);
+      
+      console.log('Examen reçu:', e ? 'OUI' : 'VIDE');
+      
+      if (!e || e.trim().length === 0) {
+        throw new Error('Groq n\'a pas généré d\'examen. Réessayez.');
+      }
+      
+      setExam(e); 
+      
+    } catch (error: any) {
+      console.error('Erreur génération examen:', error);
+      alert(`Erreur: ${error.message || 'Impossible de générer l\'examen. Vérifiez votre connexion et réessayez.'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
