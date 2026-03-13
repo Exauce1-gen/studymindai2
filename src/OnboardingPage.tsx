@@ -57,22 +57,39 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
+    if (selectedSubjects.length < 3) {
+      alert('Sélectionne au moins 3 matières');
+      return;
+    }
+
     try {
       setLoading(true);
-      await updateUserProfile({
+      
+      const profileData = {
         first_name: firstName,
         last_name: lastName,
         display_name: `${firstName} ${lastName}`,
-        age: parseInt(age),
-        gender,
-        grade,
+        age: parseInt(age) || 0,
+        gender: gender || '',
+        grade: grade || '',
         subjects: selectedSubjects,
         onboarding_completed: true
-      });
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Erreur lors de la sauvegarde. Réessayez.');
+      };
+
+      console.log('Sauvegarde du profil:', profileData);
+      
+      await updateUserProfile(profileData);
+      
+      // Si on arrive ici, la sauvegarde a réussi
+      console.log('Profil sauvegardé avec succès !');
+      
+    } catch (error: any) {
+      console.error('Erreur complète:', error);
       setLoading(false);
+      
+      // Message d'erreur plus détaillé
+      const errorMsg = error?.message || error?.error_description || 'Erreur inconnue';
+      alert(`Erreur lors de la sauvegarde: ${errorMsg}\n\nRéessayez ou rechargez la page.`);
     }
   };
 
