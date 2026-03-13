@@ -65,7 +65,8 @@ export default function OnboardingPage() {
     try {
       setLoading(true);
       
-      const profileData = {
+      // Cast explicite pour éviter erreurs TypeScript
+      await updateUserProfile({
         first_name: firstName,
         last_name: lastName,
         display_name: `${firstName} ${lastName}`,
@@ -74,22 +75,12 @@ export default function OnboardingPage() {
         grade: grade || '',
         subjects: selectedSubjects,
         onboarding_completed: true
-      };
-
-      console.log('Sauvegarde du profil:', profileData);
-      
-      await updateUserProfile(profileData);
-      
-      // Si on arrive ici, la sauvegarde a réussi
-      console.log('Profil sauvegardé avec succès !');
+      } as any);
       
     } catch (error: any) {
-      console.error('Erreur complète:', error);
+      console.error('Erreur:', error);
       setLoading(false);
-      
-      // Message d'erreur plus détaillé
-      const errorMsg = error?.message || error?.error_description || 'Erreur inconnue';
-      alert(`Erreur lors de la sauvegarde: ${errorMsg}\n\nRéessayez ou rechargez la page.`);
+      alert(`Erreur: ${error?.message || 'Réessayez'}`);
     }
   };
 
