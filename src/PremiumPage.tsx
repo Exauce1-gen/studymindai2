@@ -1,8 +1,4 @@
 import { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-
-// Votre clé publique Stripe
-const stripePromise = loadStripe('pk_test_51TApqxKEDPD2hZYdq0AKjEEK1jes8saJnUYKzlO84kIeME0nOuznK2SGRjSSLyc4yybPsl2KhnGOla2D5Bs5iSEI00nClOPTMX');
 
 interface PremiumPageProps {
   onClose: () => void;
@@ -11,37 +7,15 @@ interface PremiumPageProps {
 export default function PremiumPage({ onClose }: PremiumPageProps) {
   const [loading, setLoading] = useState(false);
 
-  const handleSubscribe = async () => {
-    try {
-      setLoading(true);
-      
-      const stripe = await stripePromise;
-      if (!stripe) {
-        alert('Erreur de chargement Stripe');
-        return;
-      }
-
-      // Rediriger vers Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
-        lineItems: [{
-          price: 'price_1TArqIKEDPD2hZYdhxJZ5qmP', // Votre Price ID
-          quantity: 1,
-        }],
-        mode: 'subscription',
-        successUrl: `${window.location.origin}?success=true`,
-        cancelUrl: `${window.location.origin}?canceled=true`,
-      });
-
-      if (error) {
-        console.error('Erreur Stripe:', error);
-        alert('Erreur lors de la redirection vers le paiement');
-      }
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Une erreur est survenue');
-    } finally {
-      setLoading(false);
-    }
+  const handleSubscribe = () => {
+    setLoading(true);
+    
+    // Stripe Payment Link - Vous allez le créer dans Stripe Dashboard
+    // Remplacez par votre lien de paiement Stripe
+    const stripePaymentLink = 'https://buy.stripe.com/test_eVq6oI5Lz1Vbg5Sat78AE00';
+    
+    // Redirection vers Stripe
+    window.location.href = stripePaymentLink;
   };
 
   return (
@@ -84,8 +58,11 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
             justifyContent: 'center',
             cursor: 'pointer',
             color: '#fff',
-            fontSize: 20
+            fontSize: 20,
+            transition: 'background 0.2s'
           }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
         >
           ×
         </button>
@@ -101,10 +78,10 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
               WebkitTextFillColor: 'transparent',
               marginBottom: 12
             }}>
-              Passe à Premium 🌟
+              Upgrade to Premium 🌟
             </h1>
             <p style={{ color: '#888', fontSize: 16 }}>
-              Débloquez tout le potentiel de StudyMind AI
+              Unlock unlimited learning with AI
             </p>
           </div>
 
@@ -120,25 +97,24 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
               background: '#0e0e1d',
               border: '1px solid #333',
               borderRadius: 16,
-              padding: 32,
-              position: 'relative'
+              padding: 32
             }}>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>💎</div>
-                <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Gratuit</h3>
+                <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, color: '#e8e8f8' }}>Free</h3>
                 <div style={{ fontSize: 36, fontWeight: 800, color: '#6C5CE7', marginBottom: 4 }}>
-                  0 FCFA
+                  $0
                 </div>
-                <div style={{ fontSize: 14, color: '#666' }}>par mois</div>
+                <div style={{ fontSize: 14, color: '#666' }}>per month</div>
               </div>
 
               <div style={{ marginBottom: 24 }}>
                 {[
-                  '10 résumés par jour',
-                  '5 quiz par jour',
-                  '2 examens par jour',
-                  'Chat limité',
-                  'Publicités'
+                  '10 summaries/day',
+                  '5 quizzes/day',
+                  '2 exams/day',
+                  'Limited chat',
+                  'Ads included'
                 ].map((feature, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
                     <span style={{ color: '#666', fontSize: 16 }}>•</span>
@@ -161,7 +137,7 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
                   cursor: 'not-allowed'
                 }}
               >
-                Plan actuel
+                Current plan
               </button>
             </div>
 
@@ -173,7 +149,7 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
               padding: 32,
               position: 'relative'
             }}>
-              {/* Badge "Populaire" */}
+              {/* Badge */}
               <div style={{
                 position: 'absolute',
                 top: -12,
@@ -184,32 +160,36 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
                 borderRadius: 20,
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#fff'
+                color: '#fff',
+                whiteSpace: 'nowrap'
               }}>
-                POPULAIRE
+                BEST VALUE
               </div>
 
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>🌟</div>
-                <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Premium</h3>
-                <div style={{ fontSize: 36, fontWeight: 800, color: '#6C5CE7', marginBottom: 4 }}>
-                  2000 FCFA
+                <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, color: '#e8e8f8' }}>Premium</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 36, fontWeight: 800, color: '#6C5CE7' }}>$3</span>
+                  <span style={{ fontSize: 14, color: '#888' }}>/ month</span>
                 </div>
-                <div style={{ fontSize: 14, color: '#888' }}>par mois</div>
+                <div style={{ fontSize: 12, color: '#6C5CE7', fontStyle: 'italic' }}>
+                  (~2000 FCFA)
+                </div>
               </div>
 
               <div style={{ marginBottom: 24 }}>
                 {[
-                  '✨ Résumés ILLIMITÉS',
-                  '✨ Quiz ILLIMITÉS',
-                  '✨ Examens ILLIMITÉS',
-                  '✨ Chat ILLIMITÉ',
-                  '✨ SANS PUBLICITÉS',
-                  '✨ Support prioritaire',
-                  '✨ Nouvelles fonctionnalités en premier'
+                  '✨ UNLIMITED summaries',
+                  '✨ UNLIMITED quizzes',
+                  '✨ UNLIMITED exams',
+                  '✨ UNLIMITED chat',
+                  '✨ NO ADS',
+                  '✨ Priority support',
+                  '✨ Early access to new features'
                 ].map((feature, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
-                    <span style={{ color: '#6C5CE7', fontSize: 16 }}>✓</span>
+                    <span style={{ color: '#6C5CE7', fontSize: 16, flexShrink: 0 }}>✓</span>
                     <span style={{ color: '#e8e8f8', fontSize: 14, fontWeight: 600 }}>{feature}</span>
                   </div>
                 ))}
@@ -229,16 +209,16 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
                   fontWeight: 800,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   boxShadow: loading ? 'none' : '0 8px 24px rgba(108,92,231,0.4)',
-                  transition: 'transform 0.2s'
+                  transition: 'all 0.2s'
                 }}
                 onMouseOver={e => {
-                  if (!loading) e.currentTarget.style.transform = 'scale(1.02)';
+                  if (!loading) e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseOut={e => {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                {loading ? '⏳ Redirection...' : '🚀 S\'abonner maintenant'}
+                {loading ? '⏳ Redirecting to Stripe...' : '🚀 Subscribe now'}
               </button>
             </div>
           </div>
@@ -250,25 +230,33 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
             borderRadius: 16,
             padding: 32
           }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>
-              Questions fréquentes
+            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#e8e8f8' }}>
+              Frequently asked questions
             </h3>
 
             {[
               {
-                q: 'Puis-je annuler à tout moment ?',
-                a: 'Oui ! Vous pouvez annuler votre abonnement à tout moment. Vous garderez l\'accès Premium jusqu\'à la fin de votre période payée.'
+                q: 'Can I cancel anytime?',
+                a: 'Yes! You can cancel your subscription at any time. You\'ll keep Premium access until the end of your billing period.'
               },
               {
-                q: 'Comment payer ?',
-                a: 'Nous acceptons les cartes bancaires internationales et Mobile Money (Orange Money, MTN Money, Moov Money).'
+                q: 'What payment methods do you accept?',
+                a: 'We accept international credit/debit cards (Visa, Mastercard, Amex) and Mobile Money (Orange Money, MTN Money, Moov Money).'
               },
               {
-                q: 'Que se passe-t-il si je reviens au plan gratuit ?',
-                a: 'Vous retrouverez les limites du plan gratuit (10 résumés/jour, 5 quiz/jour, publicités).'
+                q: 'Will I be charged in dollars or FCFA?',
+                a: 'You\'ll be charged in USD ($3), but Stripe automatically converts it to your local currency. You can pay with Mobile Money in FCFA.'
+              },
+              {
+                q: 'What happens if I go back to free?',
+                a: 'You\'ll return to the free plan limits (10 summaries/day, 5 quizzes/day, ads included).'
+              },
+              {
+                q: 'Is my payment secure?',
+                a: 'Absolutely! All payments are processed by Stripe, one of the world\'s most trusted and secure payment platforms.'
               }
             ].map((faq, i) => (
-              <div key={i} style={{ marginBottom: 20 }}>
+              <div key={i} style={{ marginBottom: i < 4 ? 20 : 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#e8e8f8', marginBottom: 8 }}>
                   {faq.q}
                 </div>
@@ -285,10 +273,12 @@ export default function PremiumPage({ onClose }: PremiumPageProps) {
             marginTop: 32,
             padding: 16,
             background: 'rgba(108,92,231,0.1)',
+            border: '1px solid rgba(108,92,231,0.2)',
             borderRadius: 12
           }}>
-            <div style={{ fontSize: 13, color: '#6C5CE7', fontWeight: 600 }}>
-              🔒 Paiement 100% sécurisé par Stripe
+            <div style={{ fontSize: 13, color: '#6C5CE7', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <span>🔒</span>
+              <span>100% secure payment powered by Stripe</span>
             </div>
           </div>
         </div>
