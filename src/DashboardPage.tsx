@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import AdBanner, { AdSlots } from './AdBanner';
+import PremiumPage from './PremiumPage';
 
 interface DashboardPageProps {
   onStartLearning: () => void;
@@ -7,6 +9,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
   const { userProfile, signOut } = useAuth();
+  const [showPremium, setShowPremium] = useState(false);
 
   if (!userProfile) return null;
 
@@ -64,6 +67,22 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           }}>
             {userProfile.grade}
           </div>
+          <button
+            onClick={() => setShowPremium(true)}
+            style={{
+              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+              border: 'none',
+              padding: '6px 14px',
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#fff',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(108,92,231,0.3)'
+            }}
+          >
+            ✨ Premium
+          </button>
           <button
             onClick={signOut}
             style={{
@@ -215,6 +234,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Premium Modal */}
+      {showPremium && <PremiumPage onClose={() => setShowPremium(false)} />}
     </div>
   );
 }
