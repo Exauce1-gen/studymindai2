@@ -417,12 +417,22 @@ interface ExamQuestion {
   explanation: string;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXAM SCREEN - QCM INTERACTIF AVEC NOTATION (VERSION CORRIGÉE)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface ExamQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
 function ExamScreen() {
   const [text, setText] = useState('');
   const [subject, setSubject] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // États pour l'examen
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -440,19 +450,16 @@ function ExamScreen() {
       setUserAnswers([]);
       setSubmitted(false);
 
-      const prompt = `Tu es un professeur expert. Crée un examen de 5 questions à choix multiples (QCM) sur le sujet suivant : "${subject}".
+      const systemPrompt = `Tu es un professeur expert. Crée un examen de 5 questions à choix multiples (QCM).
 
-Cours de référence :
-${text}
-
-RÈGLES IMPORTANTES :
+RÈGLES STRICTES :
 1. Exactement 5 questions
-2. Chaque question a 4 options (A, B, C, D)
-3. UNE SEULE bonne réponse par question
-4. Questions de difficulté croissante (2 faciles, 2 moyennes, 1 difficile)
+2. Chaque question a exactement 4 options
+3. UNE SEULE bonne réponse par question (index 0-3)
+4. Difficulté croissante
 5. Chaque question vaut 4 points (total 20 points)
 
-FORMAT DE RÉPONSE (STRICT) :
+FORMAT JSON (réponds UNIQUEMENT avec ce JSON, rien d'autre) :
 {
   "questions": [
     {
@@ -462,23 +469,22 @@ FORMAT DE RÉPONSE (STRICT) :
       "explanation": "Paris est la capitale de la France depuis 987."
     }
   ]
-}
+}`;
 
-IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant ou après.`;
+      const userMessage = `Sujet de l'examen : ${subject}
 
-      const response = await callGroq(prompt);
+Cours de référence :
+${text}`;
+
+      const response = await callGroq(systemPrompt, userMessage);
       
-      // Nettoyer la réponse pour extraire le JSON
       let cleanedResponse = response.trim();
-      
-      // Retirer les balises markdown si présentes
       cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       
-      // Parser le JSON
       const parsed = JSON.parse(cleanedResponse);
       
       if (!parsed.questions || parsed.questions.length === 0) {
-        throw new Error('Format de réponse invalide');
+        throw new Error('Format invalide');
       }
 
       setQuestions(parsed.questions);
@@ -493,32 +499,25 @@ IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant o
   };
 
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
-    if (submitted) return; // Empêcher de changer après soumission
-    
+    if (submitted) return;
     const newAnswers = [...userAnswers];
     newAnswers[questionIndex] = answerIndex;
     setUserAnswers(newAnswers);
   };
 
   const handleSubmit = () => {
-    // Vérifier que toutes les questions ont une réponse
     if (userAnswers.some(answer => answer === null)) {
-      alert('Veuillez répondre à toutes les questions avant de soumettre !');
+      alert('Répondez à toutes les questions avant de soumettre !');
       return;
     }
 
-    // Calculer le score
     let correctCount = 0;
     questions.forEach((q, i) => {
-      if (userAnswers[i] === q.correctAnswer) {
-        correctCount++;
-      }
+      if (userAnswers[i] === q.correctAnswer) correctCount++;
     });
 
-    setScore(correctCount * 4); // 4 points par question
+    setScore(correctCount * 4);
     setSubmitted(true);
-    
-    // Scroll vers le haut pour voir le résultat
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -534,52 +533,38 @@ IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant o
   return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📝 Examen IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Groq crée un examen QCM avec correction automatique</p>
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>QCM avec correction automatique</p>
 
       {questions.length === 0 ? (
-        // Formulaire de génération
         <>
           <input
             style={{width: '100%', marginBottom: 12, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}}
-            placeholder="Sujet de l'examen (ex: Photosynthèse, Seconde Guerre mondiale...)"
+            placeholder="Sujet (ex: Photosynthèse, Révolution française...)"
             value={subject}
             onChange={e => setSubject(e.target.value)}
           />
-
           <textarea
             style={{width: '100%', minHeight: 100, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}}
             placeholder="Colle ton cours de référence..."
             value={text}
             onChange={e => setText(e.target.value)}
           />
-
           <button
             onClick={generateExamQCM}
             disabled={loading || !text.trim() || !subject.trim()}
             style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}
           >
-            {loading ? "⏳ IA crée l'examen..." : "📝 Générer l'examen (5 QCM)"}
+            {loading ? "⏳ IA crée l'examen..." : "📝 Générer 5 QCM (20 points)"}
           </button>
-
-          {loading && (
-            <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>
-              <div style={{marginBottom: 12}}>Groq prépare votre examen QCM...</div>
-              <div style={{fontSize: 12, color: '#888'}}>Cela peut prendre 10-20 secondes</div>
-            </div>
-          )}
+          {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq prépare votre examen QCM...</div>}
         </>
       ) : (
-        // Affichage de l'examen
         <div>
-          {/* Résultat si soumis */}
           {submitted && (
             <div style={{
-              background: score >= 16 ? 'rgba(0, 206, 201, 0.15)' : score >= 12 ? 'rgba(253, 121, 168, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+              background: score >= 16 ? 'rgba(0,206,201,0.15)' : score >= 12 ? 'rgba(253,121,168,0.15)' : 'rgba(255,107,107,0.15)',
               border: `2px solid ${score >= 16 ? '#00cec9' : score >= 12 ? '#fd79a8' : '#ff6b6b'}`,
-              borderRadius: 16,
-              padding: 24,
-              marginBottom: 24,
-              textAlign: 'center'
+              borderRadius: 16, padding: 24, marginBottom: 24, textAlign: 'center'
             }}>
               <div style={{fontSize: 48, marginBottom: 12}}>
                 {score >= 16 ? '🎉' : score >= 12 ? '👍' : '💪'}
@@ -593,138 +578,96 @@ IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant o
             </div>
           )}
 
-          {/* Les questions */}
-          {questions.map((q, qIndex) => (
-            <div key={qIndex} style={{
-              background: '#0e0e1d',
-              border: submitted 
-                ? (userAnswers[qIndex] === q.correctAnswer ? '2px solid #00cec9' : '2px solid #ff6b6b')
-                : '1px solid #333',
-              borderRadius: 16,
-              padding: 20,
-              marginBottom: 16
-            }}>
-              {/* En-tête de la question */}
-              <div style={{display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16}}>
-                <div style={{
-                  background: submitted 
-                    ? (userAnswers[qIndex] === q.correctAnswer ? '#00cec9' : '#ff6b6b')
-                    : '#6C5CE7',
-                  color: '#fff',
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 800,
-                  flexShrink: 0
-                }}>
-                  {qIndex + 1}
-                </div>
-                <div style={{flex: 1}}>
-                  <div style={{fontSize: 16, fontWeight: 700, color: '#e8e8f8', lineHeight: 1.5, marginBottom: 4}}>
-                    {q.question}
+          {questions.map((q, qIndex) => {
+            const userAnswer = userAnswers[qIndex];
+            const isCorrect = userAnswer === q.correctAnswer;
+            
+            return (
+              <div key={qIndex} style={{
+                background: '#0e0e1d',
+                border: submitted ? (isCorrect ? '2px solid #00cec9' : '2px solid #ff6b6b') : '1px solid #333',
+                borderRadius: 16, padding: 20, marginBottom: 16
+              }}>
+                <div style={{display: 'flex', gap: 12, marginBottom: 16}}>
+                  <div style={{
+                    background: submitted ? (isCorrect ? '#00cec9' : '#ff6b6b') : '#6C5CE7',
+                    color: '#fff', width: 32, height: 32, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 14, fontWeight: 800, flexShrink: 0
+                  }}>
+                    {qIndex + 1}
                   </div>
-                  <div style={{fontSize: 12, color: '#888'}}>
-                    4 points
+                  <div style={{flex: 1}}>
+                    <div style={{fontSize: 16, fontWeight: 700, color: '#e8e8f8', lineHeight: 1.5}}>
+                      {q.question}
+                    </div>
+                    <div style={{fontSize: 12, color: '#888', marginTop: 4}}>4 points</div>
                   </div>
+                  {submitted && <div style={{fontSize: 24}}>{isCorrect ? '✅' : '❌'}</div>}
                 </div>
+
+                <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+                  {q.options.map((option, oIndex) => {
+                    const isSelected = userAnswer === oIndex;
+                    const isCorrectOption = oIndex === q.correctAnswer;
+                    const showCorrect = submitted && isCorrectOption;
+                    const showWrong = submitted && isSelected && !isCorrectOption;
+
+                    return (
+                      <button
+                        key={oIndex}
+                        onClick={() => handleAnswerSelect(qIndex, oIndex)}
+                        disabled={submitted}
+                        style={{
+                          padding: '14px 16px', borderRadius: 12,
+                          border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '1px solid #444',
+                          background: showCorrect ? 'rgba(0,206,201,0.1)' : showWrong ? 'rgba(255,107,107,0.1)' : isSelected ? 'rgba(108,92,231,0.15)' : '#1a1a2e',
+                          color: '#e8e8f8', fontSize: 14, fontWeight: isSelected ? 600 : 400,
+                          cursor: submitted ? 'not-allowed' : 'pointer',
+                          textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12
+                        }}
+                      >
+                        <div style={{
+                          width: 24, height: 24, borderRadius: '50%',
+                          border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '2px solid #444',
+                          background: isSelected ? (showCorrect ? '#00cec9' : showWrong ? '#ff6b6b' : '#6C5CE7') : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0
+                        }}>
+                          {isSelected && (showCorrect ? '✓' : showWrong ? '✗' : '✓')}
+                        </div>
+                        <span style={{flex: 1}}>{option}</span>
+                        {showCorrect && <span style={{color: '#00cec9', fontSize: 18}}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 {submitted && (
-                  <div style={{fontSize: 24}}>
-                    {userAnswers[qIndex] === q.correctAnswer ? '✅' : '❌'}
+                  <div style={{
+                    marginTop: 16, padding: 14,
+                    background: 'rgba(108,92,231,0.1)', border: '1px solid rgba(108,92,231,0.3)', borderRadius: 10
+                  }}>
+                    <div style={{fontSize: 12, color: '#6C5CE7', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase'}}>
+                      💡 Explication
+                    </div>
+                    <div style={{fontSize: 14, color: '#e8e8f8', lineHeight: 1.6}}>{q.explanation}</div>
                   </div>
                 )}
               </div>
+            );
+          })}
 
-              {/* Les options */}
-              <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-                {q.options.map((option, oIndex) => {
-                  const isSelected = userAnswers[qIndex] === oIndex;
-                  const isCorrect = oIndex === q.correctAnswer;
-                  const showCorrect = submitted && isCorrect;
-                  const showWrong = submitted && isSelected && !isCorrect;
-
-                  return (
-                    <button
-                      key={oIndex}
-                      onClick={() => handleAnswerSelect(qIndex, oIndex)}
-                      disabled={submitted}
-                      style={{
-                        padding: '14px 16px',
-                        borderRadius: 12,
-                        border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '1px solid #444',
-                        background: showCorrect ? 'rgba(0, 206, 201, 0.1)' : showWrong ? 'rgba(255, 107, 107, 0.1)' : isSelected ? 'rgba(108, 92, 231, 0.15)' : '#1a1a2e',
-                        color: '#e8e8f8',
-                        fontSize: 14,
-                        fontWeight: isSelected ? 600 : 400,
-                        cursor: submitted ? 'not-allowed' : 'pointer',
-                        textAlign: 'left',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <div style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '2px solid #444',
-                        background: isSelected ? (showCorrect ? '#00cec9' : showWrong ? '#ff6b6b' : '#6C5CE7') : 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 12,
-                        flexShrink: 0
-                      }}>
-                        {isSelected && (showCorrect ? '✓' : showWrong ? '✗' : '✓')}
-                      </div>
-                      <span style={{flex: 1}}>{option}</span>
-                      {showCorrect && <span style={{color: '#00cec9', fontSize: 18}}>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Explication (visible après soumission) */}
-              {submitted && (
-                <div style={{
-                  marginTop: 16,
-                  padding: 14,
-                  background: 'rgba(108, 92, 231, 0.1)',
-                  border: '1px solid rgba(108, 92, 231, 0.3)',
-                  borderRadius: 10
-                }}>
-                  <div style={{fontSize: 12, color: '#6C5CE7', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase'}}>
-                    💡 Explication
-                  </div>
-                  <div style={{fontSize: 14, color: '#e8e8f8', lineHeight: 1.6}}>
-                    {q.explanation}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Boutons d'action */}
           <div style={{display: 'flex', gap: 12, marginTop: 24}}>
             {!submitted ? (
               <button
                 onClick={handleSubmit}
                 disabled={userAnswers.some(a => a === null)}
                 style={{
-                  flex: 1,
-                  padding: '16px 20px',
-                  borderRadius: 14,
-                  border: 'none',
+                  flex: 1, padding: '16px 20px', borderRadius: 14, border: 'none',
                   background: userAnswers.some(a => a === null) ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
-                  color: '#fff',
-                  fontSize: 16,
-                  fontWeight: 800,
+                  color: '#fff', fontSize: 16, fontWeight: 800,
                   cursor: userAnswers.some(a => a === null) ? 'not-allowed' : 'pointer',
-                  boxShadow: userAnswers.some(a => a === null) ? 'none' : '0 8px 24px rgba(108, 92, 231, 0.4)'
+                  boxShadow: userAnswers.some(a => a === null) ? 'none' : '0 8px 24px rgba(108,92,231,0.4)'
                 }}
               >
                 📊 Soumettre l'examen
@@ -733,15 +676,9 @@ IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant o
               <button
                 onClick={handleReset}
                 style={{
-                  flex: 1,
-                  padding: '16px 20px',
-                  borderRadius: 14,
-                  border: '1px solid #6C5CE7',
-                  background: 'rgba(108, 92, 231, 0.15)',
-                  color: '#6C5CE7',
-                  fontSize: 16,
-                  fontWeight: 800,
-                  cursor: 'pointer'
+                  flex: 1, padding: '16px 20px', borderRadius: 14,
+                  border: '1px solid #6C5CE7', background: 'rgba(108,92,231,0.15)',
+                  color: '#6C5CE7', fontSize: 16, fontWeight: 800, cursor: 'pointer'
                 }}
               >
                 🔄 Nouvel examen
@@ -751,7 +688,7 @@ IMPORTANT : Réponds UNIQUEMENT avec le JSON, RIEN d'autre. Pas de texte avant o
 
           {!submitted && userAnswers.some(a => a === null) && (
             <div style={{textAlign: 'center', marginTop: 16, color: '#888', fontSize: 13}}>
-              Répondez à toutes les questions pour soumettre l'examen
+              Répondez à toutes les questions pour soumettre
             </div>
           )}
         </div>
