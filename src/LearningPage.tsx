@@ -44,93 +44,106 @@ async function callGroq(systemPrompt: string, userMessage: string): Promise<stri
 }
 
 // Fonctions de génération avec IA
+
 async function generateSummary(text: string): Promise<string> {
   return await callGroq(
-    `Tu es un assistant pédagogique expert. Génère un résumé ULTRA-COURT et STRUCTURÉ en français.
-
+    `Tu es un assistant pédagogique expert. Génère un résumé CLAIR, COMPLET et STRUCTURÉ en français.
+ 
 Format OBLIGATOIRE :
-📌 CONCEPT : [nom du concept en 1 ligne]
-📐 FORMULE : [formule mathématique si applicable, sinon skip]
-📝 DÉFINITION : [définition en 1 phrase courte max 20 mots]
-🔑 POINTS CLÉS : 
-• [point 1 en 10 mots max]
-• [point 2 en 10 mots max]
-• [point 3 en 10 mots max]
-
-Sois ULTRA-CONCIS. Pas de blabla. Style télégraphique.`,
-    `Résume ce cours de façon ULTRA-COURTE et STRUCTURÉE :\n\n${text}`
+📌 CONCEPT PRINCIPAL : [Titre du concept en 1-2 phrases explicatives]
+ 
+📝 DÉFINITION COMPLÈTE : 
+[Explication détaillée en 3-4 phrases. Sois clair et pédagogique. Explique VRAIMENT le concept.]
+ 
+🔑 POINTS CLÉS (4-5 points) :
+• [Point 1 : explication complète en 25-35 mots avec détails]
+• [Point 2 : explication complète en 25-35 mots avec détails]
+• [Point 3 : explication complète en 25-35 mots avec détails]
+• [Point 4 : explication complète en 25-35 mots avec détails]
+• [Point 5 : explication complète en 25-35 mots avec détails (optionnel)]
+ 
+📐 FORMULE/ÉQUATION (si applicable) :
+[Formule complète avec explication de chaque variable]
+ 
+💡 EXEMPLE CONCRET :
+[Un exemple pratique détaillé en 3-4 phrases pour bien comprendre]
+ 
+Sois CLAIR, COMPLET et PÉDAGOGIQUE. Le résumé doit être compréhensible et utile.`,
+    `Résume ce cours de façon CLAIRE et COMPLÈTE :\n\n${text}`
   );
 }
 
 async function generateQuiz(text: string): Promise<Question[]> {
-  const raw = await callGroq(
-    `Tu es un professeur expert. Génère exactement 5 questions QCM en français.
-
+  const systemPrompt = `Tu es un professeur expert. Génère exactement 5 questions QCM en français.
+ 
+IMPORTANT : Réponds UNIQUEMENT avec un objet JSON valide. Pas de texte avant ou après. Pas de markdown.
+ 
+Format JSON strict :
+{
+  "questions": [
+    {
+      "question": "Quelle est la formule de la loi d'Ohm ?",
+      "options": ["U = R × I", "P = U × I", "E = m × c²", "F = m × a"],
+      "correct": 0,
+      "explanation": "La loi d'Ohm établit que la tension U est égale à la résistance R multipliée par l'intensité I."
+    }
+  ]
+}
+ 
 RÈGLES STRICTES :
-- Les RÉPONSES DOIVENT ÊTRE DANS LES OPTIONS (A, B, C, D)
-- Si question = "Quelle est la formule ?", alors UNE option doit contenir la VRAIE formule
-- Si question = "Qu'est-ce que X ?", alors UNE option doit contenir la VRAIE définition
-- Les mauvaises réponses doivent être PLAUSIBLES mais FAUSSES
-
-Format EXACT :
-Q1: [question claire et précise]
-A) [réponse complète] B) [réponse complète] C) [réponse complète] D) [réponse complète]
-Réponse: [A/B/C/D]
-Explication: [pourquoi c'est cette réponse en 1 phrase]
-
-Exemple CORRECT :
-Q1: Quelle est la formule de la loi d'Ohm ?
-A) U = R × I  B) P = U × I  C) E = m × c²  D) F = m × a
-Réponse: A
-Explication: La loi d'Ohm établit que la tension U est égale à la résistance R multipliée par l'intensité I.
-
-Répète ce format pour Q2, Q3, Q4, Q5.`,
-    `Cours : ${text}`
-  );
-  
-  const questions: Question[] = [];
-  const blocks = raw.split(/\n(?=Q\d+[:\.])/g);
-  
-  for (const block of blocks) {
-    const lines = block.trim().split('\n').filter(Boolean);
-    if (!lines.length) continue;
+- "question" = texte de la question
+- "options" = array de 4 VRAIES réponses complètes (PAS "Option A" ou "Option B")
+- "correct" = index de la bonne réponse (0, 1, 2, ou 3)
+- "explanation" = explication claire
+- Génère EXACTEMENT 5 questions différentes`;
+ 
+  const userMessage = `Cours à transformer en quiz :\n\n${text}`;
+ 
+  try {
+    const raw = await callGroq(systemPrompt, userMessage);
     
-    const qMatch = lines[0].match(/Q\d+[:\.]?\s*(.+)/);
-    if (!qMatch) continue;
+    // Nettoyer la réponse
+    let cleanedResponse = raw.trim();
     
-    const question = qMatch[1].trim();
-    const options: string[] = [];
-    let correct = 0;
-    let explanation = '';
+    // Retirer markdown
+    cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
     
-    for (const line of lines.slice(1)) {
-      const o = line.match(/^([A-D])[)\.:\s]\s*(.+)/);
-      if (o) {
-        options.push(o[2].trim());
-        continue;
-      }
-      
-      const c = line.match(/R[ée]ponse\s*[:\-]\s*([A-D])/i);
-      if (c) {
-        correct = c[1].charCodeAt(0) - 65;
-        continue;
-      }
-      
-      const e = line.match(/Explication\s*[:\-]\s*(.+)/i);
-      if (e) explanation = e[1].trim();
+    // Retirer texte avant le JSON
+    const jsonStart = cleanedResponse.indexOf('{');
+    const jsonEnd = cleanedResponse.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
     }
     
-    if (options.length >= 2) {
-      questions.push({ question, options, correct, explanation });
+    console.log('Quiz JSON:', cleanedResponse); // Debug
+    
+    const parsed = JSON.parse(cleanedResponse);
+    
+    if (parsed.questions && parsed.questions.length > 0) {
+      return parsed.questions.map((q: any) => ({
+        question: q.question,
+        options: q.options || ["Réponse 1", "Réponse 2", "Réponse 3", "Réponse 4"],
+        correct: q.correct || 0,
+        explanation: q.explanation || "Bonne réponse !"
+      }));
     }
+  } catch (error) {
+    console.error('Erreur parsing quiz:', error);
   }
   
-  return questions.length > 0 ? questions : [
+  // Fallback en cas d'erreur
+  return [
     {
-      question: "Question basée sur le cours",
-      options: ["Option A", "Option B", "Option C", "Option D"],
+      question: "Quelle est l'idée principale de ce cours ?",
+      options: [
+        "Premier concept important du cours",
+        "Deuxième concept du cours",
+        "Troisième concept du cours",
+        "Quatrième concept du cours"
+      ],
       correct: 0,
-      explanation: "Explication de la réponse correcte."
+      explanation: "Cette réponse correspond au concept principal développé dans le cours."
     }
   ];
 }
@@ -438,96 +451,81 @@ function ExamScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
 
+
   const generateExamQCM = async () => {
     if (!text.trim() || !subject.trim()) {
       alert("Entre le sujet ET colle ton cours");
       return;
     }
-
+ 
     try {
       setLoading(true);
       setQuestions([]);
       setUserAnswers([]);
       setSubmitted(false);
-
-      const systemPrompt = `Tu es un professeur expert. Crée un examen de 5 questions à choix multiples (QCM).
-
-RÈGLES STRICTES :
-1. Exactement 5 questions
-2. Chaque question a exactement 4 options
-3. UNE SEULE bonne réponse par question (index 0-3)
-4. Difficulté croissante
-5. Chaque question vaut 4 points (total 20 points)
-
-FORMAT JSON (réponds UNIQUEMENT avec ce JSON, rien d'autre) :
+ 
+      const systemPrompt = `Tu es un professeur expert. Crée un examen de 5 questions QCM.
+ 
+IMPORTANT : Réponds UNIQUEMENT avec du JSON valide. Pas de texte avant ou après. Pas de markdown.
+ 
+Format JSON strict :
 {
   "questions": [
     {
-      "question": "Quelle est la capitale de la France ?",
-      "options": ["Londres", "Paris", "Berlin", "Madrid"],
-      "correctAnswer": 1,
-      "explanation": "Paris est la capitale de la France depuis 987."
+      "question": "Question claire ici ?",
+      "options": ["Réponse complète 1", "Réponse complète 2", "Réponse complète 3", "Réponse complète 4"],
+      "correctAnswer": 0,
+      "explanation": "Explication de pourquoi c'est cette réponse"
     }
   ]
-}`;
-
-      const userMessage = `Sujet de l'examen : ${subject}
-
-Cours de référence :
-${text}`;
-
+}
+ 
+RÈGLES STRICTES :
+- 5 questions exactement
+- "options" = 4 VRAIES réponses complètes (PAS "Option A")
+- "correctAnswer" = index 0, 1, 2, ou 3
+- Questions de difficulté croissante`;
+ 
+      const userMessage = `Sujet de l'examen : ${subject}\n\nCours de référence :\n${text}`;
+ 
       const response = await callGroq(systemPrompt, userMessage);
       
+      // NETTOYAGE AMÉLIORÉ pour mobile
       let cleanedResponse = response.trim();
-      cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      
+      // Retirer markdown
+      cleanedResponse = cleanedResponse.replace(/```json\n?/g, '');
+      cleanedResponse = cleanedResponse.replace(/```\n?/g, '');
+      cleanedResponse = cleanedResponse.replace(/`/g, '');
+      
+      // Retirer tout texte avant le premier {
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
+      
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error('Format JSON invalide');
+      }
+      
+      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+      
+      console.log('Examen JSON nettoyé:', cleanedResponse); // Debug
       
       const parsed = JSON.parse(cleanedResponse);
       
       if (!parsed.questions || parsed.questions.length === 0) {
-        throw new Error('Format invalide');
+        throw new Error('Aucune question générée');
       }
-
+ 
       setQuestions(parsed.questions);
       setUserAnswers(new Array(parsed.questions.length).fill(null));
       
     } catch (error: any) {
       console.error('Erreur génération examen:', error);
-      alert(`Erreur: ${error.message || 'Impossible de générer l\'examen. Réessayez.'}`);
+      
+      alert(`Impossible de générer l'examen. Essayez avec un cours plus court ou simplifiez le texte.`);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
-    if (submitted) return;
-    const newAnswers = [...userAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setUserAnswers(newAnswers);
-  };
-
-  const handleSubmit = () => {
-    if (userAnswers.some(answer => answer === null)) {
-      alert('Répondez à toutes les questions avant de soumettre !');
-      return;
-    }
-
-    let correctCount = 0;
-    questions.forEach((q, i) => {
-      if (userAnswers[i] === q.correctAnswer) correctCount++;
-    });
-
-    setScore(correctCount * 4);
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleReset = () => {
-    setQuestions([]);
-    setUserAnswers([]);
-    setSubmitted(false);
-    setScore(0);
-    setText('');
-    setSubject('');
   };
 
   return (
