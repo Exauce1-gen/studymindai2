@@ -44,30 +44,28 @@ async function callGroq(systemPrompt: string, userMessage: string): Promise<stri
 }
 
 // Fonctions de génération avec IA
-
 async function generateSummary(text: string): Promise<string> {
   return await callGroq(
     `Tu es un assistant pédagogique expert. Génère un résumé CLAIR, COMPLET et STRUCTURÉ en français.
- 
+
 Format OBLIGATOIRE :
 📌 CONCEPT PRINCIPAL : [Titre du concept en 1-2 phrases explicatives]
- 
+
 📝 DÉFINITION COMPLÈTE : 
 [Explication détaillée en 3-4 phrases. Sois clair et pédagogique. Explique VRAIMENT le concept.]
- 
+
 🔑 POINTS CLÉS (4-5 points) :
 • [Point 1 : explication complète en 25-35 mots avec détails]
 • [Point 2 : explication complète en 25-35 mots avec détails]
 • [Point 3 : explication complète en 25-35 mots avec détails]
 • [Point 4 : explication complète en 25-35 mots avec détails]
-• [Point 5 : explication complète en 25-35 mots avec détails (optionnel)]
- 
+
 📐 FORMULE/ÉQUATION (si applicable) :
 [Formule complète avec explication de chaque variable]
- 
+
 💡 EXEMPLE CONCRET :
 [Un exemple pratique détaillé en 3-4 phrases pour bien comprendre]
- 
+
 Sois CLAIR, COMPLET et PÉDAGOGIQUE. Le résumé doit être compréhensible et utile.`,
     `Résume ce cours de façon CLAIRE et COMPLÈTE :\n\n${text}`
   );
@@ -75,9 +73,9 @@ Sois CLAIR, COMPLET et PÉDAGOGIQUE. Le résumé doit être compréhensible et u
 
 async function generateQuiz(text: string): Promise<Question[]> {
   const systemPrompt = `Tu es un professeur expert. Génère exactement 5 questions QCM en français.
- 
+
 IMPORTANT : Réponds UNIQUEMENT avec un objet JSON valide. Pas de texte avant ou après. Pas de markdown.
- 
+
 Format JSON strict :
 {
   "questions": [
@@ -89,34 +87,28 @@ Format JSON strict :
     }
   ]
 }
- 
+
 RÈGLES STRICTES :
 - "question" = texte de la question
 - "options" = array de 4 VRAIES réponses complètes (PAS "Option A" ou "Option B")
 - "correct" = index de la bonne réponse (0, 1, 2, ou 3)
 - "explanation" = explication claire
 - Génère EXACTEMENT 5 questions différentes`;
- 
+
   const userMessage = `Cours à transformer en quiz :\n\n${text}`;
- 
+
   try {
     const raw = await callGroq(systemPrompt, userMessage);
     
-    // Nettoyer la réponse
     let cleanedResponse = raw.trim();
-    
-    // Retirer markdown
     cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
     
-    // Retirer texte avant le JSON
     const jsonStart = cleanedResponse.indexOf('{');
     const jsonEnd = cleanedResponse.lastIndexOf('}');
     
     if (jsonStart !== -1 && jsonEnd !== -1) {
       cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
     }
-    
-    console.log('Quiz JSON:', cleanedResponse); // Debug
     
     const parsed = JSON.parse(cleanedResponse);
     
@@ -132,7 +124,6 @@ RÈGLES STRICTES :
     console.error('Erreur parsing quiz:', error);
   }
   
-  // Fallback en cas d'erreur
   return [
     {
       question: "Quelle est l'idée principale de ce cours ?",
@@ -420,109 +411,39 @@ function QuizScreen() {
 // ÉCRAN EXAMEN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Nouveau composant ExamScreen avec QCM interactif
-// À REMPLACER dans LearningPage.tsx (remplace l'ancien ExamScreen)
-
-interface ExamQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// EXAM SCREEN - QCM INTERACTIF AVEC NOTATION (VERSION CORRIGÉE)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-interface ExamQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-}
-
 function ExamScreen() {
   const [text, setText] = useState('');
   const [subject, setSubject] = useState('');
+  const [exam, setExam] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
-  const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState(0);
+  const [showSolution, setShowSolution] = useState(false);
 
-
-  const generateExamQCM = async () => {
-    if (!text.trim() || !subject.trim()) {
-      alert("Entre le sujet ET colle ton cours");
-      return;
+  const generate = async () => {
+    if (!text.trim() || !subject.trim()) { 
+      alert("Entre le sujet ET colle ton cours"); 
+      return; 
     }
- 
+    
     try {
-      setLoading(true);
-      setQuestions([]);
-      setUserAnswers([]);
-      setSubmitted(false);
- 
-      const systemPrompt = `Tu es un professeur expert. Crée un examen de 5 questions QCM.
- 
-IMPORTANT : Réponds UNIQUEMENT avec du JSON valide. Pas de texte avant ou après. Pas de markdown.
- 
-Format JSON strict :
-{
-  "questions": [
-    {
-      "question": "Question claire ici ?",
-      "options": ["Réponse complète 1", "Réponse complète 2", "Réponse complète 3", "Réponse complète 4"],
-      "correctAnswer": 0,
-      "explanation": "Explication de pourquoi c'est cette réponse"
-    }
-  ]
-}
- 
-RÈGLES STRICTES :
-- 5 questions exactement
-- "options" = 4 VRAIES réponses complètes (PAS "Option A")
-- "correctAnswer" = index 0, 1, 2, ou 3
-- Questions de difficulté croissante`;
- 
-      const userMessage = `Sujet de l'examen : ${subject}\n\nCours de référence :\n${text}`;
- 
-      const response = await callGroq(systemPrompt, userMessage);
+      setLoading(true); 
+      setExam(''); 
+      setShowSolution(false);
       
-      // NETTOYAGE AMÉLIORÉ pour mobile
-      let cleanedResponse = response.trim();
+      console.log('Génération examen...', { subject, textLength: text.length });
       
-      // Retirer markdown
-      cleanedResponse = cleanedResponse.replace(/```json\n?/g, '');
-      cleanedResponse = cleanedResponse.replace(/```\n?/g, '');
-      cleanedResponse = cleanedResponse.replace(/`/g, '');
+      const e = await generateExam(text, subject);
       
-      // Retirer tout texte avant le premier {
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
+      console.log('Examen reçu:', e ? 'OUI' : 'VIDE');
       
-      if (jsonStart === -1 || jsonEnd === -1) {
-        throw new Error('Format JSON invalide');
+      if (!e || e.trim().length === 0) {
+        throw new Error('Groq n\'a pas généré d\'examen. Réessayez.');
       }
       
-      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-      
-      console.log('Examen JSON nettoyé:', cleanedResponse); // Debug
-      
-      const parsed = JSON.parse(cleanedResponse);
-      
-      if (!parsed.questions || parsed.questions.length === 0) {
-        throw new Error('Aucune question générée');
-      }
- 
-      setQuestions(parsed.questions);
-      setUserAnswers(new Array(parsed.questions.length).fill(null));
+      setExam(e); 
       
     } catch (error: any) {
       console.error('Erreur génération examen:', error);
-      
-      alert(`Impossible de générer l'examen. Essayez avec un cours plus court ou simplifiez le texte.`);
+      alert(`Erreur: ${error.message || 'Impossible de générer l\'examen. Vérifiez votre connexion et réessayez.'}`);
     } finally {
       setLoading(false);
     }
@@ -531,162 +452,62 @@ RÈGLES STRICTES :
   return (
     <div style={{padding: 20}}>
       <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📝 Examen IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>QCM avec correction automatique</p>
-
-      {questions.length === 0 ? (
+      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Groq crée un examen complet avec corrigé</p>
+      
+      {!exam ? (
         <>
-          <input
+          <input 
             style={{width: '100%', marginBottom: 12, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}}
-            placeholder="Sujet (ex: Photosynthèse, Révolution française...)"
-            value={subject}
+            placeholder="Sujet de l'examen (ex: Électricité, Révolution française…)" 
+            value={subject} 
             onChange={e => setSubject(e.target.value)}
           />
-          <textarea
-            style={{width: '100%', minHeight: 100, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}}
-            placeholder="Colle ton cours de référence..."
-            value={text}
+          
+          <textarea 
+            style={{width: '100%', minHeight: 100, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}} 
+            placeholder="Colle ton cours de référence…" 
+            value={text} 
             onChange={e => setText(e.target.value)}
           />
-          <button
-            onClick={generateExamQCM}
-            disabled={loading || !text.trim() || !subject.trim()}
-            style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}
-          >
-            {loading ? "⏳ IA crée l'examen..." : "📝 Générer 5 QCM (20 points)"}
+          
+          <div style={{display: 'flex', gap: 8, marginTop: 12}}>
+            {[["🧬 Bio", SAMPLES.bio], ["🏛️ Hist", SAMPLES.hist]].map(([l,s]) => 
+              <button key={l} onClick={() => setText(s as string)} style={{padding: '7px 14px', borderRadius: 20, border: '1px solid #444', background: '#1a1a2e', color: '#888', cursor: 'pointer', fontSize: 12}}>{l}</button>
+            )}
+          </div>
+          
+          <button 
+            onClick={generate} 
+            disabled={loading || !text.trim() || !subject.trim()} 
+            style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>
+            {loading ? "⏳ IA crée l'examen…" : "📝 Générer l'examen complet"}
           </button>
-          {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq prépare votre examen QCM...</div>}
+          
+          {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq prépare votre examen...</div>}
         </>
       ) : (
         <div>
-          {submitted && (
-            <div style={{
-              background: score >= 16 ? 'rgba(0,206,201,0.15)' : score >= 12 ? 'rgba(253,121,168,0.15)' : 'rgba(255,107,107,0.15)',
-              border: `2px solid ${score >= 16 ? '#00cec9' : score >= 12 ? '#fd79a8' : '#ff6b6b'}`,
-              borderRadius: 16, padding: 24, marginBottom: 24, textAlign: 'center'
-            }}>
-              <div style={{fontSize: 48, marginBottom: 12}}>
-                {score >= 16 ? '🎉' : score >= 12 ? '👍' : '💪'}
-              </div>
-              <div style={{fontSize: 32, fontWeight: 800, color: score >= 16 ? '#00cec9' : score >= 12 ? '#fd79a8' : '#ff6b6b', marginBottom: 8}}>
-                {score}/20
-              </div>
-              <div style={{fontSize: 16, color: '#e8e8f8', fontWeight: 600}}>
-                {score >= 16 ? 'Excellent ! Très bien maîtrisé !' : score >= 12 ? 'Bien ! Encore quelques efforts.' : 'Continue, tu vas y arriver !'}
-              </div>
-            </div>
-          )}
-
-          {questions.map((q, qIndex) => {
-            const userAnswer = userAnswers[qIndex];
-            const isCorrect = userAnswer === q.correctAnswer;
-            
-            return (
-              <div key={qIndex} style={{
-                background: '#0e0e1d',
-                border: submitted ? (isCorrect ? '2px solid #00cec9' : '2px solid #ff6b6b') : '1px solid #333',
-                borderRadius: 16, padding: 20, marginBottom: 16
-              }}>
-                <div style={{display: 'flex', gap: 12, marginBottom: 16}}>
-                  <div style={{
-                    background: submitted ? (isCorrect ? '#00cec9' : '#ff6b6b') : '#6C5CE7',
-                    color: '#fff', width: 32, height: 32, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, fontWeight: 800, flexShrink: 0
-                  }}>
-                    {qIndex + 1}
-                  </div>
-                  <div style={{flex: 1}}>
-                    <div style={{fontSize: 16, fontWeight: 700, color: '#e8e8f8', lineHeight: 1.5}}>
-                      {q.question}
-                    </div>
-                    <div style={{fontSize: 12, color: '#888', marginTop: 4}}>4 points</div>
-                  </div>
-                  {submitted && <div style={{fontSize: 24}}>{isCorrect ? '✅' : '❌'}</div>}
-                </div>
-
-                <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-                  {q.options.map((option, oIndex) => {
-                    const isSelected = userAnswer === oIndex;
-                    const isCorrectOption = oIndex === q.correctAnswer;
-                    const showCorrect = submitted && isCorrectOption;
-                    const showWrong = submitted && isSelected && !isCorrectOption;
-
-                    return (
-                      <button
-                        key={oIndex}
-                        onClick={() => handleAnswerSelect(qIndex, oIndex)}
-                        disabled={submitted}
-                        style={{
-                          padding: '14px 16px', borderRadius: 12,
-                          border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '1px solid #444',
-                          background: showCorrect ? 'rgba(0,206,201,0.1)' : showWrong ? 'rgba(255,107,107,0.1)' : isSelected ? 'rgba(108,92,231,0.15)' : '#1a1a2e',
-                          color: '#e8e8f8', fontSize: 14, fontWeight: isSelected ? 600 : 400,
-                          cursor: submitted ? 'not-allowed' : 'pointer',
-                          textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12
-                        }}
-                      >
-                        <div style={{
-                          width: 24, height: 24, borderRadius: '50%',
-                          border: showCorrect ? '2px solid #00cec9' : showWrong ? '2px solid #ff6b6b' : isSelected ? '2px solid #6C5CE7' : '2px solid #444',
-                          background: isSelected ? (showCorrect ? '#00cec9' : showWrong ? '#ff6b6b' : '#6C5CE7') : 'transparent',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0
-                        }}>
-                          {isSelected && (showCorrect ? '✓' : showWrong ? '✗' : '✓')}
-                        </div>
-                        <span style={{flex: 1}}>{option}</span>
-                        {showCorrect && <span style={{color: '#00cec9', fontSize: 18}}>✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {submitted && (
-                  <div style={{
-                    marginTop: 16, padding: 14,
-                    background: 'rgba(108,92,231,0.1)', border: '1px solid rgba(108,92,231,0.3)', borderRadius: 10
-                  }}>
-                    <div style={{fontSize: 12, color: '#6C5CE7', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase'}}>
-                      💡 Explication
-                    </div>
-                    <div style={{fontSize: 14, color: '#e8e8f8', lineHeight: 1.6}}>{q.explanation}</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          <div style={{display: 'flex', gap: 12, marginTop: 24}}>
-            {!submitted ? (
-              <button
-                onClick={handleSubmit}
-                disabled={userAnswers.some(a => a === null)}
-                style={{
-                  flex: 1, padding: '16px 20px', borderRadius: 14, border: 'none',
-                  background: userAnswers.some(a => a === null) ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
-                  color: '#fff', fontSize: 16, fontWeight: 800,
-                  cursor: userAnswers.some(a => a === null) ? 'not-allowed' : 'pointer',
-                  boxShadow: userAnswers.some(a => a === null) ? 'none' : '0 8px 24px rgba(108,92,231,0.4)'
-                }}
-              >
-                📊 Soumettre l'examen
-              </button>
-            ) : (
-              <button
-                onClick={handleReset}
-                style={{
-                  flex: 1, padding: '16px 20px', borderRadius: 14,
-                  border: '1px solid #6C5CE7', background: 'rgba(108,92,231,0.15)',
-                  color: '#6C5CE7', fontSize: 16, fontWeight: 800, cursor: 'pointer'
-                }}
-              >
-                🔄 Nouvel examen
-              </button>
-            )}
+          <div style={{background: '#0e0e1d', border: '1px solid #333', borderRadius: 16, padding: 20, marginBottom: 16}}>
+            <div style={{fontSize: 11, color: '#6C5CE7', fontWeight: 700, marginBottom: 12, textTransform: 'uppercase'}}>✦ Examen généré par Groq AI</div>
+            <div style={{fontSize: 14, lineHeight: 1.8, color: '#e8e8f8', whiteSpace: 'pre-wrap'}}>{exam}</div>
           </div>
-
-          {!submitted && userAnswers.some(a => a === null) && (
-            <div style={{textAlign: 'center', marginTop: 16, color: '#888', fontSize: 13}}>
-              Répondez à toutes les questions pour soumettre
+          
+          <div style={{display: 'flex', gap: 10}}>
+            <button 
+              onClick={() => { setExam(''); setText(''); setSubject(''); }} 
+              style={{flex: 1, padding: '12px', borderRadius: 12, border: '1px solid #333', background: '#1a1a2e', color: '#e8e8f8', fontSize: 13, fontWeight: 600, cursor: 'pointer'}}>
+              🔄 Nouvel examen
+            </button>
+            <button 
+              onClick={() => setShowSolution(!showSolution)} 
+              style={{flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer'}}>
+              {showSolution ? "🙈 Masquer corrigé" : "✅ Voir le corrigé"}
+            </button>
+          </div>
+          
+          {showSolution && (
+            <div style={{marginTop: 16, padding: 16, background: 'rgba(0,206,201,0.08)', border: '1px solid rgba(0,206,201,0.3)', borderRadius: 12}}>
+              <div style={{fontSize: 13, fontWeight: 700, color: '#00cec9', marginBottom: 8}}>💡 Attention : Consultez le corrigé APRÈS avoir terminé !</div>
             </div>
           )}
         </div>
