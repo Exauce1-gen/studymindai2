@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
+import LandingPage from './LandingPage';
 import LoginPage from './LoginPage';
 import OnboardingPage from './OnboardingPage';
 import DashboardPage from './DashboardPage';
@@ -8,6 +9,7 @@ import LearningPage from './LearningPage';
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
   const [showLearning, setShowLearning] = useState(false);
+  const [showAuth, setShowAuth] = useState(false); // Nouveau state pour la Landing Page
 
   // Loading state
   if (loading) {
@@ -48,9 +50,12 @@ function AppContent() {
     );
   }
 
-  // Not logged in → Show Login Page
+  // Not logged in → Show Landing Page or Login Page
   if (!user) {
-    return <LoginPage />;
+    if (showAuth) {
+      return <LoginPage />;
+    }
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
   // Logged in but onboarding not completed → Show Onboarding
