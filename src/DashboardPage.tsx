@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useStats } from './useStats';
 import AdBanner, { AdSlots } from './AdBanner';
+import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
 
 interface DashboardPageProps {
@@ -9,6 +11,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
   const { userProfile, signOut } = useAuth();
+  const { stats, badges, loading: statsLoading, getAverageScore } = useStats();
   const [showPremium, setShowPremium] = useState(false);
 
   if (!userProfile) return null;
@@ -139,7 +142,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             padding: 20
           }}>
             <div style={{fontSize: 32, marginBottom: 8}}>📄</div>
-            <div style={{fontSize: 24, fontWeight: 800, color: '#6C5CE7', marginBottom: 4}}>0</div>
+            <div style={{fontSize: 24, fontWeight: 800, color: '#6C5CE7', marginBottom: 4}}>
+              {stats?.summaries_count || 0}
+            </div>
             <div style={{fontSize: 13, color: '#888'}}>Résumés créés</div>
           </div>
 
@@ -150,7 +155,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             padding: 20
           }}>
             <div style={{fontSize: 32, marginBottom: 8}}>🧩</div>
-            <div style={{fontSize: 24, fontWeight: 800, color: '#fd79a8', marginBottom: 4}}>0</div>
+            <div style={{fontSize: 24, fontWeight: 800, color: '#fd79a8', marginBottom: 4}}>
+              {stats?.quizzes_completed || 0}
+            </div>
             <div style={{fontSize: 13, color: '#888'}}>Quiz complétés</div>
           </div>
 
@@ -160,8 +167,10 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             borderRadius: 16,
             padding: 20
           }}>
-            <div style={{fontSize: 32, marginBottom: 8}}>⚡</div>
-            <div style={{fontSize: 24, fontWeight: 800, color: '#00cec9', marginBottom: 4}}>0j</div>
+            <div style={{fontSize: 32, marginBottom: 8}}>🔥</div>
+            <div style={{fontSize: 24, fontWeight: 800, color: '#00cec9', marginBottom: 4}}>
+              {stats?.streak_days || 0}j
+            </div>
             <div style={{fontSize: 13, color: '#888'}}>Série active</div>
           </div>
         </div>
@@ -233,6 +242,80 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             ))}
           </div>
         </div>
+
+        {/* Statistiques détaillées */}
+        {stats && (
+          <div style={{
+            background: '#0e0e1d',
+            border: '1px solid #333',
+            borderRadius: 16,
+            padding: 24,
+            marginTop: 32
+          }}>
+            <h3 style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: '#e8e8f8',
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              📊 Vos statistiques complètes
+            </h3>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: 16
+            }}>
+              {[
+                { icon: '📄', label: 'Résumés', value: stats.summaries_count, color: '#6C5CE7' },
+                { icon: '🧩', label: 'Quiz', value: stats.quizzes_completed, color: '#fd79a8' },
+                { icon: '📝', label: 'Examens', value: stats.exams_taken, color: '#00cec9' },
+                { icon: '📊', label: 'Moyenne', value: `${getAverageScore()}/20`, color: '#6C5CE7' },
+                { icon: '🔥', label: 'Série', value: `${stats.streak_days} jours`, color: '#ff6b6b' },
+                { icon: '⏱️', label: 'Temps', value: `${Math.floor(stats.study_time_minutes / 60)}h ${stats.study_time_minutes % 60}m`, color: '#00cec9' },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: '#1a1a2e',
+                    border: '1px solid #333',
+                    borderRadius: 12,
+                    padding: 16,
+                    textAlign: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.borderColor = stat.color;
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = '#333';
+                  }}
+                >
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>{stat.icon}</div>
+                  <div style={{
+                    fontSize: 20,
+                    fontWeight: 800,
+                    color: stat.color,
+                    marginBottom: 4
+                  }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Badges */}
+        <BadgeDisplay badges={badges} />
       </div>
 
       {/* Premium Modal */}
