@@ -9,7 +9,8 @@ export default function PremiumPage() {
   // CONFIGURATION FEDAPAY
   // ═══════════════════════════════════════════════════════════════════════════
   
-  const FEDAPAY_PUBLIC_KEY = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY || '';
+  // CLÉ DE TEST (à remplacer par la vraie clé LIVE après activation)
+  const FEDAPAY_PUBLIC_KEY = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY || 'pk_sandbox_your_test_key_here';
   
   // Prix en USD (Dollar américain)
   const PREMIUM_PRICE = 3;
@@ -21,12 +22,15 @@ export default function PremiumPage() {
       return;
     }
 
+    // VÉRIFICATION : Clé API configurée ?
+    if (!FEDAPAY_PUBLIC_KEY || FEDAPAY_PUBLIC_KEY === 'pk_sandbox_your_test_key_here') {
+      alert('⚠️ Configuration FedaPay manquante !\n\nÉtapes :\n1. Créez votre compte sur fedapay.com\n2. Récupérez votre clé publique\n3. Ajoutez-la dans Vercel → Settings → Environment Variables\n\nEn attendant, le paiement ne fonctionnera pas.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Générer un ID de transaction unique
-      const transactionId = `SM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
       // Charger le SDK FedaPay
       if (!window.FedaPay) {
         const script = document.createElement('script');
@@ -34,10 +38,13 @@ export default function PremiumPage() {
         script.async = true;
         document.body.appendChild(script);
         
-        await new Promise((resolve) => {
+        await new Promise((resolve, reject) => {
           script.onload = resolve;
+          script.onerror = () => reject(new Error('Impossible de charger FedaPay'));
         });
       }
+
+      console.log('FedaPay chargé, initialisation...');
 
       // Configuration du paiement FedaPay
       window.FedaPay.init({
@@ -49,6 +56,7 @@ export default function PremiumPage() {
           callback_url: `${window.location.origin}?success=true`,
           customer: {
             firstname: user.email?.split('@')[0] || 'User',
+            lastname: 'StudyMind',
             email: user.email || '',
           },
           custom_metadata: {
@@ -60,21 +68,26 @@ export default function PremiumPage() {
         onComplete: (resp) => {
           console.log('Paiement complété:', resp);
           if (resp.reason === 'CHECKOUT_COMPLETED') {
+            alert('🎉 Paiement réussi ! Bienvenue Premium !');
             window.location.href = `${window.location.origin}?success=true`;
+          } else if (resp.reason === 'CHECKOUT_CANCELED') {
+            alert('❌ Paiement annulé');
           }
         },
         onError: (error) => {
           console.error('Erreur paiement:', error);
-          alert('Erreur lors du paiement. Veuillez réessayer.');
+          alert(`❌ Erreur lors du paiement: ${error.message || 'Veuillez réessayer'}`);
         }
       });
+
+      console.log('Ouverture du widget FedaPay...');
 
       // Ouvrir le widget de paiement
       window.FedaPay.open();
 
     } catch (error: any) {
       console.error('Erreur FedaPay:', error);
-      alert(`Erreur: ${error.message || 'Impossible de créer le paiement. Réessayez.'}`);
+      alert(`❌ Erreur: ${error.message || 'Impossible d\'ouvrir le paiement. Vérifiez votre connexion.'}`);
     } finally {
       setLoading(false);
     }
@@ -112,6 +125,33 @@ export default function PremiumPage() {
           Accès illimité à toutes les fonctionnalités IA. Aucune publicité. Support prioritaire.
         </p>
       </div>
+
+      {/* Alerte configuration */}
+      {(!FEDAPAY_PUBLIC_KEY || FEDAPAY_PUBLIC_KEY === 'pk_sandbox_your_test_key_here') && (
+        <div style={{
+          maxWidth: 600,
+          margin: '0 auto 32px',
+          padding: 20,
+          background: 'rgba(255,107,107,0.1)',
+          border: '1px solid rgba(255,107,107,0.3)',
+          borderRadius: 12,
+          textAlign: 'center'
+        }}>
+          <div style={{fontSize: 32, marginBottom: 8}}>⚠️</div>
+          <div style={{fontSize: 16, fontWeight: 700, color: '#ff6b6b', marginBottom: 8}}>
+            Configuration FedaPay manquante
+          </div>
+          <div style={{fontSize: 14, color: '#888', lineHeight: 1.6}}>
+            Le paiement ne fonctionnera pas tant que vous n'aurez pas configuré votre clé FedaPay.
+            <br /><br />
+            <strong>Étapes :</strong>
+            <br />1. Créez votre compte sur fedapay.com
+            <br />2. Activez votre compte (24h)
+            <br />3. Récupérez votre clé publique
+            <br />4. Ajoutez-la dans Vercel
+          </div>
+        </div>
+      )}
 
       {/* Plans */}
       <div style={{
