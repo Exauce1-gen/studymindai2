@@ -319,7 +319,42 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
       </div>
 
       {/* Premium Modal */}
-      {showPremium && <PremiumPage onClose={() => setShowPremium(false)} />}
+      {showPremium && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 1000,
+          overflowY: 'auto'
+        }}>
+          <button
+            onClick={() => setShowPremium(false)}
+            style={{
+              position: 'fixed',
+              top: 20,
+              right: 20,
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              border: '1px solid #333',
+              background: '#1a1a2e',
+              color: '#e8e8f8',
+              fontSize: 20,
+              cursor: 'pointer',
+              zIndex: 1001,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ×
+          </button>
+          <PremiumPage />
+        </div>
+      )}
     </div>
   );
 }
