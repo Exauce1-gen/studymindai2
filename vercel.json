@@ -1,11 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/index.html"
+      "source": "/landing",
+      "destination": "/landing.html"
     },
     {
       "source": "/app",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
     },
     {
