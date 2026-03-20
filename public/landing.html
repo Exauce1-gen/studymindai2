@@ -32,7 +32,6 @@
       line-height: 1.6;
     }
     
-    /* Header */
     .header {
       position: sticky;
       top: 0;
@@ -85,7 +84,6 @@
       transform: scale(1.05);
     }
     
-    /* Hero */
     .hero {
       max-width: 1200px;
       margin: 0 auto;
@@ -138,7 +136,6 @@
       background: rgba(108,92,231,0.2);
     }
     
-    /* Features */
     .features {
       max-width: 1200px;
       margin: 80px auto;
@@ -189,7 +186,6 @@
       line-height: 1.6;
     }
     
-    /* Stats */
     .stats {
       max-width: 1200px;
       margin: 100px auto;
@@ -214,7 +210,6 @@
       color: #888;
     }
     
-    /* Testimonials */
     .testimonials {
       max-width: 1200px;
       margin: 80px auto;
@@ -271,7 +266,6 @@
       color: #666;
     }
     
-    /* About */
     .about {
       max-width: 800px;
       margin: 100px auto;
@@ -286,7 +280,6 @@
       margin-bottom: 20px;
     }
     
-    /* CTA Section */
     .cta-section {
       max-width: 800px;
       margin: 100px auto;
@@ -298,7 +291,7 @@
     
     .cta-section h2 {
       font-size: 38px;
-      font-weight: 900;
+      fontWeight: 900;
       margin-bottom: 16px;
     }
     
@@ -322,7 +315,6 @@
       display: inline-block;
     }
     
-    /* Footer */
     .footer {
       max-width: 1200px;
       margin: 0 auto;
@@ -366,7 +358,6 @@
       font-size: 14px;
     }
     
-    /* Mobile */
     @media (max-width: 768px) {
       .header { padding: 16px 20px; }
       .hero { padding: 60px 20px; }
@@ -381,26 +372,23 @@
   </style>
 </head>
 <body>
-  <!-- Header -->
   <div class="header">
-    <div class="logo" onclick="window.location.href='/'">
+    <div class="logo">
       <div class="logo-icon">🧠</div>
       <div>Study<span style="color: #6C5CE7;">Mind</span> AI</div>
     </div>
-    <button class="cta-button" onclick="window.location.href='/index.html?app=true'">✨ Commencer gratuitement</button>
+    <a href="/app" class="cta-button">✨ Commencer gratuitement</a>
   </div>
 
-  <!-- Hero -->
   <section class="hero">
     <h1>Apprenez plus vite avec l'IA 🚀</h1>
     <p>Transformez vos cours en résumés clairs, quiz personnalisés et examens réalistes. Propulsé par l'intelligence artificielle.</p>
     <div class="hero-buttons">
-      <button class="cta-button" onclick="window.location.href='/index.html?app=true'">🎯 Essayer gratuitement</button>
+      <a href="/app" class="cta-button">🎯 Essayer gratuitement</a>
       <a href="#fonctionnalites" class="secondary-button">En savoir plus</a>
     </div>
   </section>
 
-  <!-- Stats -->
   <div class="stats">
     <div>
       <div class="stat-value">10 000+</div>
@@ -420,7 +408,6 @@
     </div>
   </div>
 
-  <!-- Features -->
   <section class="features" id="fonctionnalites">
     <h2 class="section-title">Tout ce dont vous avez besoin 💪</h2>
     <div class="features-grid">
@@ -462,7 +449,6 @@
     </div>
   </section>
 
-  <!-- Testimonials -->
   <section class="testimonials">
     <h2 class="section-title">Ce qu'ils en pensent 🎓</h2>
     <div class="testimonials-grid">
@@ -501,7 +487,6 @@
     </div>
   </section>
 
-  <!-- About -->
   <section class="about">
     <h2 class="section-title">Notre mission 🎯</h2>
     <p>StudyMind AI a été créé avec une vision simple : <strong>rendre l'apprentissage accessible à tous les étudiants africains</strong>.</p>
@@ -509,32 +494,30 @@
     <p>Aujourd'hui, des milliers d'étudiants au Bénin et en Afrique de l'Ouest utilisent StudyMind AI pour réussir leurs examens. <strong>Et vous ?</strong></p>
   </section>
 
-  <!-- CTA Section -->
   <section class="cta-section">
     <h2>Prêt à transformer vos révisions ? 🚀</h2>
     <p>Rejoignez les milliers d'étudiants qui réussissent avec StudyMind AI</p>
-    <button class="cta-white" onclick="window.location.href='/index.html?app=true'">Commencer gratuitement →</button>
+    <a href="/app" class="cta-white">Commencer gratuitement →</a>
   </section>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-section">
         <h3>Produit</h3>
-        <a href="#" onclick="window.location.href='/index.html?app=true'">Application</a>
+        <a href="/app">Application</a>
         <a href="#fonctionnalites">Fonctionnalités</a>
       </div>
       
       <div class="footer-section">
         <h3>Ressources</h3>
         <a href="#fonctionnalites">Fonctionnalités</a>
-        <a href="#" onclick="window.location.href='/index.html?app=true'">Essayer</a>
+        <a href="/app">Essayer</a>
       </div>
       
       <div class="footer-section">
         <h3>Légal</h3>
         <a href="#about">À propos</a>
-        <a href="#" onclick="alert('Contactez-nous : contact@studymind.ai')">Contact</a>
+        <a href="#" onclick="alert('Contact: contact@studymind.ai')">Contact</a>
       </div>
       
       <div class="footer-section">
@@ -550,17 +533,7 @@
     </div>
   </footer>
 
-  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2666921129719953"
      crossorigin="anonymous"></script>
-
-  <!-- Script pour détecter ?app=true et charger l'app React -->
-  <script>
-    // Si ?app=true dans l'URL, charger l'app React
-    if (window.location.search.includes('app=true')) {
-      // Rediriger vers la vraie app React
-      window.location.href = '/';
-    }
-  </script>
 </body>
 </html>
