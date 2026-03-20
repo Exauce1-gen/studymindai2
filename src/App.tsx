@@ -65,7 +65,7 @@ function AppContent() {
 
   // Onboarding completed → Show Dashboard or Learning
   if (showLearning) {
-    return <LearningPage onBackToDashboard={() => setShowLearning(false)} />;
+    return <LearningPage />;
   }
 
   return <DashboardPage onStartLearning={() => setShowLearning(true)} />;
