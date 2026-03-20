@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudyMind AI - Apprenez plus vite avec l'intelligence artificielle. Résumés automatiques, quiz personnalisés, examens IA et chat intelligent pour réussir vos études.">
+  <meta name="keywords" content="apprentissage, IA, intelligence artificielle, révision, quiz, examens, étude, Bénin, Afrique">
+  <meta name="author" content="StudyMind AI">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="StudyMind AI - Réussir avec l'IA">
+  <meta property="og:description" content="Transformez vos cours en résumés, quiz et examens personnalisés avec l'IA">
+  <meta property="og:image" content="https://studymindai-gamma.vercel.app/og-image.png">
+  <meta property="og:url" content="https://studymindai-gamma.vercel.app">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="StudyMind AI - Réussir avec l'IA">
+  <meta name="twitter:description" content="Apprenez plus vite avec l'intelligence artificielle">
+  
+  <!-- Google verification -->
+  <meta name="google-site-verification" content="f1l9x1jfLhnhDEyo3E1l422VtIZiCiBVu9nVM7R8ANQ">
+  
+  <title>StudyMind AI - Apprenez plus vite avec l'IA</title>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #07070f;
+      color: #e8e8f8;
+      line-height: 1.6;
+    }
+    
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(7,7,15,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(108,92,231,0.15);
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #6C5CE7, #fd79a8);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    
+    .cta-button {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 8px 24px rgba(108,92,231,0.3);
+      transition: transform 0.2s;
+    }
+    
+    .cta-button:hover {
+      transform: scale(1.05);
+    }
+    
+    /* Hero */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 100px 40px;
+      text-align: center;
+    }
+    
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 900;
+      margin-bottom: 24px;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff, #6C5CE7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero p {
+      font-size: 22px;
+      color: #888;
+      margin-bottom: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .secondary-button {
+      padding: 12px 28px;
+      background: rgba(108,92,231,0.12);
+      border: 1px solid rgba(108,92,231,0.3);
+      border-radius: 12px;
+      color: #6C5CE7;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+    
+    .secondary-button:hover {
+      background: rgba(108,92,231,0.2);
+    }
+    
+    /* Features */
+    .features {
+      max-width: 1200px;
+      margin: 80px auto;
+      padding: 0 40px;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 42px;
+      font-weight: 900;
+      margin-bottom: 60px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+    }
+    
+    .feature-card {
+      background: #0e0e1d;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: #6C5CE7;
+    }
+    
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .feature-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: #6C5CE7;
+    }
+    
+    .feature-desc {
+      color: #888;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    
+    /* Stats */
+    .stats {
+      max-width: 1200px;
+      margin: 100px auto;
+      padding: 60px 40px;
+      background: linear-gradient(135deg, rgba(108,92,231,0.15), rgba(253,121,168,0.1));
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 48px;
+      font-weight: 900;
+      color: #6C5CE7;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 16px;
+      color: #888;
+    }
+    
+    /* Testimonials */
+    .testimonials {
+      max-width: 1200px;
+      margin: 80px auto;
+      padding: 0 40px;
+    }
+    
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    
+    .testimonial {
+      background: #0e0e1d;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 28px;
+    }
+    
+    .testimonial-text {
+      font-size: 16px;
+      color: #e8e8f8;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .author-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6C5CE7, #fd79a8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .author-info h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e8e8f8;
+    }
+    
+    .author-info p {
+      font-size: 13px;
+      color: #666;
+    }
+    
+    /* About */
+    .about {
+      max-width: 800px;
+      margin: 100px auto;
+      padding: 0 40px;
+      text-align: center;
+    }
+    
+    .about p {
+      font-size: 18px;
+      color: #888;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+      max-width: 800px;
+      margin: 100px auto;
+      padding: 60px 40px;
+      background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
+      border-radius: 24px;
+      text-align: center;
+    }
+    
+    .cta-section h2 {
+      font-size: 38px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    
+    .cta-section p {
+      font-size: 18px;
+      margin-bottom: 32px;
+      opacity: 0.9;
+    }
+    
+    .cta-white {
+      padding: 16px 40px;
+      background: #fff;
+      color: #6C5CE7;
+      border: none;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 17px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    /* Footer */
+    .footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 40px 40px;
+      border-top: 1px solid #333;
+      text-align: center;
+    }
+    
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+      text-align: left;
+    }
+    
+    .footer-section h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #6C5CE7;
+    }
+    
+    .footer-section a {
+      display: block;
+      color: #888;
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    
+    .footer-section a:hover {
+      color: #6C5CE7;
+    }
+    
+    .footer-bottom {
+      padding-top: 32px;
+      border-top: 1px solid #333;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Mobile */
+    @media (max-width: 768px) {
+      .header { padding: 16px 20px; }
+      .hero { padding: 60px 20px; }
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 18px; }
+      .section-title { font-size: 32px; }
+      .features, .testimonials, .about { padding: 0 20px; }
+      .stats { margin: 60px 20px; padding: 40px 20px; }
+      .cta-section { margin: 60px 20px; padding: 40px 20px; }
+      .cta-section h2 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo" onclick="window.location.href='/'">
+      <div class="logo-icon">🧠</div>
+      <div>Study<span style="color: #6C5CE7;">Mind</span> AI</div>
+    </div>
+    <button class="cta-button" onclick="window.location.href='/index.html?app=true'">✨ Commencer gratuitement</button>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Apprenez plus vite avec l'IA 🚀</h1>
+    <p>Transformez vos cours en résumés clairs, quiz personnalisés et examens réalistes. Propulsé par l'intelligence artificielle.</p>
+    <div class="hero-buttons">
+      <button class="cta-button" onclick="window.location.href='/index.html?app=true'">🎯 Essayer gratuitement</button>
+      <a href="#fonctionnalites" class="secondary-button">En savoir plus</a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div>
+      <div class="stat-value">10 000+</div>
+      <div class="stat-label">Résumés générés</div>
+    </div>
+    <div>
+      <div class="stat-value">5 000+</div>
+      <div class="stat-label">Quiz réussis</div>
+    </div>
+    <div>
+      <div class="stat-value">98%</div>
+      <div class="stat-label">Satisfaction</div>
+    </div>
+    <div>
+      <div class="stat-value">24/7</div>
+      <div class="stat-label">Disponible</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="features" id="fonctionnalites">
+    <h2 class="section-title">Tout ce dont vous avez besoin 💪</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📄</div>
+        <h3 class="feature-title">Résumés IA</h3>
+        <p class="feature-desc">Collez votre cours, obtenez un résumé structuré en 10 secondes. Concepts clés, définitions, formules et exemples.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🧩</div>
+        <h3 class="feature-title">Quiz intelligents</h3>
+        <p class="feature-desc">Quiz QCM personnalisés basés sur votre cours. Questions variées avec explications détaillées pour chaque réponse.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3 class="feature-title">Examens réalistes</h3>
+        <p class="feature-desc">Vrais examens type épreuves officielles avec correction automatique, notation sur 20 et explications complètes.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3 class="feature-title">Chat IA</h3>
+        <p class="feature-desc">Posez n'importe quelle question sur votre cours. L'IA vous répond instantanément comme un professeur particulier.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3 class="feature-title">Fiches de révision</h3>
+        <p class="feature-desc">Générez des fiches mémo automatiques avec les notions essentielles pour réviser efficacement avant les examens.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3 class="feature-title">Planning d'étude</h3>
+        <p class="feature-desc">Organisez vos révisions avec un planning personnalisé. Suivez votre progression et restez motivé.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="testimonials">
+    <h2 class="section-title">Ce qu'ils en pensent 🎓</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <p class="testimonial-text">"StudyMind AI m'a permis de passer de 12 à 16 de moyenne ! Les résumés IA sont parfaits pour réviser rapidement."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👨‍🎓</div>
+          <div class="author-info">
+            <h4>Kofi A.</h4>
+            <p>Terminale S, Cotonou</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="testimonial">
+        <p class="testimonial-text">"Les examens IA sont tellement réalistes ! Je me prépare comme si j'étais déjà à l'épreuve. Un vrai atout."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👩‍🎓</div>
+          <div class="author-info">
+            <h4>Aicha M.</h4>
+            <p>Licence 2, Porto-Novo</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="testimonial">
+        <p class="testimonial-text">"Fini les nuits blanches ! Avec les quiz et le chat IA, j'apprends plus vite et je retiens mieux. Génial !"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👨‍🎓</div>
+          <div class="author-info">
+            <h4>Serge D.</h4>
+            <p>Master 1, Parakou</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="about">
+    <h2 class="section-title">Notre mission 🎯</h2>
+    <p>StudyMind AI a été créé avec une vision simple : <strong>rendre l'apprentissage accessible à tous les étudiants africains</strong>.</p>
+    <p>Nous croyons que l'intelligence artificielle peut transformer l'éducation en rendant les révisions plus efficaces, plus rapides et plus motivantes.</p>
+    <p>Aujourd'hui, des milliers d'étudiants au Bénin et en Afrique de l'Ouest utilisent StudyMind AI pour réussir leurs examens. <strong>Et vous ?</strong></p>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2>Prêt à transformer vos révisions ? 🚀</h2>
+    <p>Rejoignez les milliers d'étudiants qui réussissent avec StudyMind AI</p>
+    <button class="cta-white" onclick="window.location.href='/index.html?app=true'">Commencer gratuitement →</button>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Produit</h3>
+        <a href="#" onclick="window.location.href='/index.html?app=true'">Application</a>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Ressources</h3>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#" onclick="window.location.href='/index.html?app=true'">Essayer</a>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Légal</h3>
+        <a href="#about">À propos</a>
+        <a href="#" onclick="alert('Contactez-nous : contact@studymind.ai')">Contact</a>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Suivez-nous</h3>
+        <a href="https://facebook.com" target="_blank">Facebook</a>
+        <a href="https://twitter.com" target="_blank">Twitter</a>
+        <a href="https://instagram.com" target="_blank">Instagram</a>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>© 2025 StudyMind AI. Propulsé par l'intelligence artificielle. Fait avec ❤️ pour les étudiants d'Afrique.</p>
+    </div>
+  </footer>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2666921129719953"
+     crossorigin="anonymous"></script>
+
+  <!-- Script pour détecter ?app=true et charger l'app React -->
+  <script>
+    // Si ?app=true dans l'URL, charger l'app React
+    if (window.location.search.includes('app=true')) {
+      // Rediriger vers la vraie app React
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
