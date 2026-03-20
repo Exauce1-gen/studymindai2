@@ -412,111 +412,643 @@ function QuizScreen() {
 // ÉCRAN EXAMEN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ExamScreen() {
-  const [text, setText] = useState('');
-  const [subject, setSubject] = useState('');
-  const [exam, setExam] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
+import { useState } from 'react';
 
-  const generate = async () => {
-    if (!text.trim() || !subject.trim()) { 
-      alert("Entre le sujet ET colle ton cours"); 
-      return; 
-    }
+// Types d'épreuves disponibles
+const examTypes = [
+  { id: 'maths', name: 'Mathématiques', duration: '3h', icon: '🔢', color: '#6C5CE7' },
+  { id: 'physique', name: 'Physique-Chimie', duration: '3h', icon: '⚗️', color: '#00b894' },
+  { id: 'philo', name: 'Philosophie', duration: '4h', icon: '🤔', color: '#fd79a8' },
+  { id: 'svt', name: 'Sciences de la Vie', duration: '3h30', icon: '🧬', color: '#00cec9' },
+  { id: 'histoire', name: 'Histoire-Géographie', duration: '4h', icon: '🌍', color: '#fdcb6e' },
+  { id: 'francais', name: 'Français', duration: '4h', icon: '📚', color: '#e17055' },
+  { id: 'anglais', name: 'Anglais', duration: '3h', icon: '🗣️', color: '#0984e3' }
+];
+
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  points: number;
+  explanation: string;
+}
+
+interface ExamData {
+  title: string;
+  duration: string;
+  totalPoints: number;
+  parts: {
+    title: string;
+    points: number;
+    questions: Question[];
+  }[];
+}
+
+export default function ExamScreen() {
+  const [step, setStep] = useState<'select' | 'config' | 'exam' | 'results'>('select');
+  const [selectedType, setSelectedType] = useState('');
+  const [subject, setSubject] = useState('');
+  const [courseText, setCourseText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [examData, setExamData] = useState<ExamData | null>(null);
+  const [userAnswers, setUserAnswers] = useState<{ [key: string]: number }>({});
+  const [showResults, setShowResults] = useState(false);
+
+  // Générer l'examen avec Groq
+  const generateExam = async () => {
+    setLoading(true);
     
+    const type = examTypes.find(t => t.id === selectedType);
+    
+    const systemPrompt = `Tu es un professeur créant une VRAIE épreuve d'examen type BAC/BEPC.
+
+MATIÈRE : ${type?.name}
+SUJET : ${subject}
+
+STRUCTURE OBLIGATOIRE :
+
+Tu dois créer un examen avec EXACTEMENT ce format JSON :
+
+{
+  "title": "Épreuve de ${type?.name} - ${subject}",
+  "duration": "${type?.duration}",
+  "totalPoints": 20,
+  "parts": [
+    {
+      "title": "PARTIE I : [Nom de la partie]",
+      "points": 8,
+      "questions": [
+        {
+          "id": 1,
+          "question": "[Énoncé complet et détaillé de la question]",
+          "options": [
+            "[Option A - réponse complète]",
+            "[Option B - réponse complète]",
+            "[Option C - réponse complète]",
+            "[Option D - réponse complète]"
+          ],
+          "correctAnswer": 0,
+          "points": 2,
+          "explanation": "[Explication détaillée de pourquoi c'est A]"
+        }
+      ]
+    },
+    {
+      "title": "PARTIE II : [Nom de la partie]",
+      "points": 12,
+      "questions": [...]
+    }
+  ]
+}
+
+RÈGLES IMPORTANTES :
+1. Crée 2-3 parties différentes
+2. Chaque partie a 3-5 questions
+3. Total : 10-15 questions
+4. Les questions doivent être DÉTAILLÉES et RÉALISTES
+5. Les options doivent être COMPLÈTES (pas juste A, B, C, D)
+6. correctAnswer est l'INDEX (0=A, 1=B, 2=C, 3=D)
+7. Total des points = 20
+
+RÉPONDS UNIQUEMENT AVEC LE JSON, RIEN D'AUTRE.`;
+
     try {
-      setLoading(true); 
-      setExam(''); 
-      setShowSolution(false);
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Cours de référence :\n\n${courseText}` }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000
+        })
+      });
+
+      const data = await response.json();
+      let examText = data.choices[0].message.content;
       
-      console.log('Génération examen...', { subject, textLength: text.length });
+      // Nettoyer le JSON (enlever markdown si présent)
+      examText = examText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       
-      const e = await generateExam(text, subject);
-      
-      console.log('Examen reçu:', e ? 'OUI' : 'VIDE');
-      
-      if (!e || e.trim().length === 0) {
-        throw new Error('Groq n\'a pas généré d\'examen. Réessayez.');
-      }
-      
-      setExam(e); 
+      const exam = JSON.parse(examText);
+      setExamData(exam);
+      setStep('exam');
       
     } catch (error: any) {
-      console.error('Erreur génération examen:', error);
-      alert(`Erreur: ${error.message || 'Impossible de générer l\'examen. Vérifiez votre connexion et réessayez.'}`);
+      console.error('Erreur:', error);
+      alert('Erreur lors de la génération. Réessayez.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{padding: 20}}>
-      <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 22, fontWeight: 800}}>📝 Examen IA</h2>
-      <p style={{color: '#888', fontSize: 13, marginBottom: 15}}>Groq crée un examen complet avec corrigé</p>
-      
-      {!exam ? (
-        <>
-          <input 
-            style={{width: '100%', marginBottom: 12, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}}
-            placeholder="Sujet de l'examen (ex: Électricité, Révolution française…)" 
-            value={subject} 
-            onChange={e => setSubject(e.target.value)}
-          />
-          
-          <textarea 
-            style={{width: '100%', minHeight: 100, padding: 14, borderRadius: 14, border: '1px solid #333', background: '#1a1a2e', color: '#fff', fontSize: 14, outline: 'none'}} 
-            placeholder="Colle ton cours de référence…" 
-            value={text} 
-            onChange={e => setText(e.target.value)}
-          />
-          
-          <div style={{display: 'flex', gap: 8, marginTop: 12}}>
-            {[["🧬 Bio", SAMPLES.bio], ["🏛️ Hist", SAMPLES.hist]].map(([l,s]) => 
-              <button key={l} onClick={() => setText(s as string)} style={{padding: '7px 14px', borderRadius: 20, border: '1px solid #444', background: '#1a1a2e', color: '#888', cursor: 'pointer', fontSize: 12}}>{l}</button>
-            )}
-          </div>
-          
-          <button 
-            onClick={generate} 
-            disabled={loading || !text.trim() || !subject.trim()} 
-            style={{width: '100%', marginTop: 16, padding: 16, borderRadius: 14, border: 'none', background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer'}}>
-            {loading ? "⏳ IA crée l'examen…" : "📝 Générer l'examen complet"}
-          </button>
-          
-          {loading && <div style={{textAlign: 'center', padding: 24, color: '#6C5CE7'}}>Groq prépare votre examen...</div>}
-        </>
-      ) : (
-        <div>
-          <div style={{background: '#0e0e1d', border: '1px solid #333', borderRadius: 16, padding: 20, marginBottom: 16}}>
-            <div style={{fontSize: 11, color: '#6C5CE7', fontWeight: 700, marginBottom: 12, textTransform: 'uppercase'}}>✦ Examen généré par Groq AI</div>
-            <div style={{fontSize: 14, lineHeight: 1.8, color: '#e8e8f8', whiteSpace: 'pre-wrap'}}>{exam}</div>
-          </div>
-          
-          <div style={{display: 'flex', gap: 10}}>
-            <button 
-              onClick={() => { setExam(''); setText(''); setSubject(''); }} 
-              style={{flex: 1, padding: '12px', borderRadius: 12, border: '1px solid #333', background: '#1a1a2e', color: '#e8e8f8', fontSize: 13, fontWeight: 600, cursor: 'pointer'}}>
-              🔄 Nouvel examen
-            </button>
-            <button 
-              onClick={() => setShowSolution(!showSolution)} 
-              style={{flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer'}}>
-              {showSolution ? "🙈 Masquer corrigé" : "✅ Voir le corrigé"}
-            </button>
-          </div>
-          
-          {showSolution && (
-            <div style={{marginTop: 16, padding: 16, background: 'rgba(0,206,201,0.08)', border: '1px solid rgba(0,206,201,0.3)', borderRadius: 12}}>
-              <div style={{fontSize: 13, fontWeight: 700, color: '#00cec9', marginBottom: 8}}>💡 Attention : Consultez le corrigé APRÈS avoir terminé !</div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+  // Soumettre l'examen et calculer la note
+  const submitExam = () => {
+    if (!examData) return;
+    
+    let totalQuestions = 0;
+    examData.parts.forEach(part => {
+      totalQuestions += part.questions.length;
+    });
 
+    if (Object.keys(userAnswers).length < totalQuestions) {
+      if (!confirm('Vous n\'avez pas répondu à toutes les questions. Voulez-vous quand même soumettre ?')) {
+        return;
+      }
+    }
+
+    setShowResults(true);
+  };
+
+  // Calculer la note
+  const calculateScore = () => {
+    if (!examData) return 0;
+    
+    let score = 0;
+    examData.parts.forEach(part => {
+      part.questions.forEach(q => {
+        const answer = userAnswers[`${part.title}-${q.id}`];
+        if (answer === q.correctAnswer) {
+          score += q.points;
+        }
+      });
+    });
+    
+    return score;
+  };
+
+  // Écran de sélection du type
+  if (step === 'select') {
+    return (
+      <div style={{padding: 20}}>
+        <h2 style={{color: '#6C5CE7', marginBottom: 10, fontSize: 24, fontWeight: 800}}>
+          📝 Épreuves d'Examen
+        </h2>
+        <p style={{color: '#888', fontSize: 14, marginBottom: 24}}>
+          Entraînez-vous avec de vraies épreuves type BAC/BEPC
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 16
+        }}>
+          {examTypes.map(type => (
+            <button
+              key={type.id}
+              onClick={() => {
+                setSelectedType(type.id);
+                setStep('config');
+              }}
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                border: '1px solid #333',
+                background: '#1a1a2e',
+                color: '#e8e8f8',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = type.color;
+                e.currentTarget.style.transform = 'translateY(-4px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#333';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{fontSize: 32, marginBottom: 8}}>{type.icon}</div>
+              <div style={{fontSize: 16, fontWeight: 700, marginBottom: 4}}>{type.name}</div>
+              <div style={{fontSize: 12, color: '#888'}}>Durée : {type.duration}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Écran de configuration
+  if (step === 'config') {
+    const type = examTypes.find(t => t.id === selectedType);
+    
+    return (
+      <div style={{padding: 20}}>
+        <button
+          onClick={() => setStep('select')}
+          style={{
+            marginBottom: 20,
+            padding: '8px 16px',
+            borderRadius: 8,
+            border: '1px solid #333',
+            background: '#1a1a2e',
+            color: '#888',
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          ← Retour
+        </button>
+
+        <div style={{
+          padding: 20,
+          background: `linear-gradient(135deg, ${type?.color}15, ${type?.color}05)`,
+          border: `1px solid ${type?.color}30`,
+          borderRadius: 16,
+          marginBottom: 24
+        }}>
+          <div style={{fontSize: 40, marginBottom: 12}}>{type?.icon}</div>
+          <h2 style={{fontSize: 24, fontWeight: 800, color: type?.color, marginBottom: 8}}>
+            {type?.name}
+          </h2>
+          <p style={{fontSize: 14, color: '#888'}}>
+            Durée : {type?.duration} • Format : QCM • Total : 20 points
+          </p>
+        </div>
+
+        <input
+          style={{
+            width: '100%',
+            marginBottom: 16,
+            padding: 14,
+            borderRadius: 14,
+            border: '1px solid #333',
+            background: '#1a1a2e',
+            color: '#fff',
+            fontSize: 15,
+            outline: 'none'
+          }}
+          placeholder="Sujet précis (ex: Les suites numériques, La Seconde Guerre mondiale...)"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+        />
+
+        <textarea
+          style={{
+            width: '100%',
+            minHeight: 150,
+            padding: 14,
+            borderRadius: 14,
+            border: '1px solid #333',
+            background: '#1a1a2e',
+            color: '#fff',
+            fontSize: 14,
+            outline: 'none',
+            marginBottom: 20,
+            resize: 'vertical'
+          }}
+          placeholder="Collez votre cours de référence ici..."
+          value={courseText}
+          onChange={e => setCourseText(e.target.value)}
+        />
+
+        <button
+          onClick={generateExam}
+          disabled={loading || !subject.trim() || !courseText.trim()}
+          style={{
+            width: '100%',
+            padding: 16,
+            borderRadius: 14,
+            border: 'none',
+            background: loading ? '#444' : `linear-gradient(135deg, ${type?.color}, ${type?.color}dd)`,
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: loading ? 'none' : `0 8px 24px ${type?.color}40`
+          }}
+        >
+          {loading ? '⏳ Création de l\'épreuve...' : '🚀 Générer l\'épreuve'}
+        </button>
+      </div>
+    );
+  }
+
+  // Écran de l'examen
+  if (step === 'exam' && examData) {
+    return (
+      <div style={{padding: 20}}>
+        {/* En-tête de l'épreuve */}
+        <div style={{
+          padding: 24,
+          background: '#1a1a2e',
+          border: '2px solid #6C5CE7',
+          borderRadius: 16,
+          marginBottom: 32,
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#888',
+            marginBottom: 8,
+            letterSpacing: 2
+          }}>
+            ÉPREUVE D'EXAMEN
+          </div>
+          <h1 style={{fontSize: 24, fontWeight: 900, color: '#e8e8f8', marginBottom: 8}}>
+            {examData.title}
+          </h1>
+          <div style={{fontSize: 14, color: '#888'}}>
+            Durée : {examData.duration} • Total : {examData.totalPoints} points
+          </div>
+        </div>
+
+        {/* Consignes */}
+        <div style={{
+          padding: 16,
+          background: 'rgba(108,92,231,0.1)',
+          border: '1px solid rgba(108,92,231,0.3)',
+          borderRadius: 12,
+          marginBottom: 32
+        }}>
+          <div style={{fontSize: 14, fontWeight: 700, color: '#6C5CE7', marginBottom: 8}}>
+            📋 CONSIGNES
+          </div>
+          <ul style={{fontSize: 13, color: '#888', paddingLeft: 20, margin: 0}}>
+            <li>Lisez attentivement chaque question</li>
+            <li>Une seule réponse correcte par question</li>
+            <li>Cliquez sur votre choix pour le sélectionner</li>
+            <li>Vous pouvez modifier vos réponses avant de soumettre</li>
+          </ul>
+        </div>
+
+        {/* Les parties */}
+        {examData.parts.map((part, partIdx) => (
+          <div key={partIdx} style={{marginBottom: 40}}>
+            <div style={{
+              padding: 16,
+              background: 'linear-gradient(135deg, #6C5CE720, #6C5CE710)',
+              borderLeft: '4px solid #6C5CE7',
+              borderRadius: 8,
+              marginBottom: 24
+            }}>
+              <h3 style={{fontSize: 18, fontWeight: 800, color: '#6C5CE7', marginBottom: 4}}>
+                {part.title}
+              </h3>
+              <div style={{fontSize: 13, color: '#888'}}>
+                {part.points} points • {part.questions.length} questions
+              </div>
+            </div>
+
+            {/* Les questions */}
+            {part.questions.map((q, qIdx) => {
+              const questionKey = `${part.title}-${q.id}`;
+              const selected = userAnswers[questionKey];
+              
+              return (
+                <div key={qIdx} style={{
+                  marginBottom: 32,
+                  padding: 20,
+                  background: '#0e0e1d',
+                  border: '1px solid #333',
+                  borderRadius: 12
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: 16
+                  }}>
+                    <div style={{flex: 1}}>
+                      <div style={{
+                        fontSize: 12,
+                        color: '#6C5CE7',
+                        fontWeight: 700,
+                        marginBottom: 8
+                      }}>
+                        Question {qIdx + 1}
+                      </div>
+                      <div style={{fontSize: 15, color: '#e8e8f8', lineHeight: 1.6}}>
+                        {q.question}
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: '4px 12px',
+                      background: 'rgba(108,92,231,0.15)',
+                      border: '1px solid rgba(108,92,231,0.3)',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: '#6C5CE7',
+                      whiteSpace: 'nowrap',
+                      marginLeft: 16
+                    }}>
+                      {q.points} pts
+                    </div>
+                  </div>
+
+                  <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+                    {q.options.map((option, optIdx) => {
+                      const isSelected = selected === optIdx;
+                      const letter = String.fromCharCode(65 + optIdx); // A, B, C, D
+                      
+                      return (
+                        <button
+                          key={optIdx}
+                          onClick={() => {
+                            setUserAnswers(prev => ({
+                              ...prev,
+                              [questionKey]: optIdx
+                            }));
+                          }}
+                          style={{
+                            padding: '14px 16px',
+                            borderRadius: 10,
+                            border: isSelected ? '2px solid #6C5CE7' : '1px solid #333',
+                            background: isSelected ? 'rgba(108,92,231,0.15)' : '#1a1a2e',
+                            color: '#e8e8f8',
+                            fontSize: 14,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 12
+                          }}
+                        >
+                          <div style={{
+                            minWidth: 28,
+                            height: 28,
+                            borderRadius: '50%',
+                            border: isSelected ? '2px solid #6C5CE7' : '2px solid #333',
+                            background: isSelected ? '#6C5CE7' : 'transparent',
+                            color: isSelected ? '#fff' : '#888',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {letter}
+                          </div>
+                          <div style={{flex: 1, paddingTop: 4}}>
+                            {option}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+
+        {/* Bouton soumettre */}
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          padding: '20px 0',
+          background: 'linear-gradient(to top, #07070f 70%, transparent)',
+          marginTop: 40
+        }}>
+          <button
+            onClick={submitExam}
+            style={{
+              width: '100%',
+              padding: 18,
+              borderRadius: 14,
+              border: 'none',
+              background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(108,92,231,0.4)'
+            }}
+          >
+            📝 Soumettre l'examen
+          </button>
+        </div>
+
+        {/* Résultats */}
+        {showResults && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 20,
+            overflowY: 'auto'
+          }}>
+            <div style={{
+              maxWidth: 700,
+              width: '100%',
+              background: '#0e0e1d',
+              border: '2px solid #6C5CE7',
+              borderRadius: 20,
+              padding: 40,
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{textAlign: 'center', marginBottom: 32}}>
+                <div style={{fontSize: 64, marginBottom: 16}}>
+                  {calculateScore() >= 10 ? '🎉' : '📚'}
+                </div>
+                <h2 style={{fontSize: 28, fontWeight: 900, color: '#e8e8f8', marginBottom: 8}}>
+                  {calculateScore() >= 10 ? 'Félicitations !' : 'Bon travail !'}
+                </h2>
+                <div style={{fontSize: 48, fontWeight: 900, color: '#6C5CE7', marginBottom: 8}}>
+                  {calculateScore()}/20
+                </div>
+                <div style={{fontSize: 14, color: '#888'}}>
+                  {calculateScore() >= 16 ? 'Excellent !' :
+                   calculateScore() >= 14 ? 'Très bien !' :
+                   calculateScore() >= 12 ? 'Bien !' :
+                   calculateScore() >= 10 ? 'Passable' :
+                   'À réviser'}
+                </div>
+              </div>
+
+              {/* Corrections détaillées */}
+              <div style={{marginBottom: 24}}>
+                <h3 style={{fontSize: 18, fontWeight: 700, color: '#6C5CE7', marginBottom: 16}}>
+                  📋 Corrections
+                </h3>
+                {examData.parts.map((part, partIdx) => (
+                  <div key={partIdx} style={{marginBottom: 24}}>
+                    <div style={{fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 12}}>
+                      {part.title}
+                    </div>
+                    {part.questions.map((q, qIdx) => {
+                      const questionKey = `${part.title}-${q.id}`;
+                      const userAnswer = userAnswers[questionKey];
+                      const isCorrect = userAnswer === q.correctAnswer;
+                      
+                      return (
+                        <div key={qIdx} style={{
+                          marginBottom: 16,
+                          padding: 16,
+                          background: isCorrect ? 'rgba(0,184,148,0.1)' : 'rgba(255,107,107,0.1)',
+                          border: `1px solid ${isCorrect ? '#00b894' : '#ff6b6b'}`,
+                          borderRadius: 10
+                        }}>
+                          <div style={{fontSize: 13, fontWeight: 700, marginBottom: 8}}>
+                            {isCorrect ? '✅' : '❌'} Question {qIdx + 1}
+                          </div>
+                          <div style={{fontSize: 13, color: '#888', marginBottom: 8}}>
+                            Votre réponse : {userAnswer !== undefined ? String.fromCharCode(65 + userAnswer) : 'Non répondu'}
+                            {' • '}
+                            Bonne réponse : {String.fromCharCode(65 + q.correctAnswer)}
+                          </div>
+                          <div style={{fontSize: 13, color: '#e8e8f8', lineHeight: 1.5}}>
+                            {q.explanation}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  setStep('select');
+                  setExamData(null);
+                  setUserAnswers({});
+                  setShowResults(false);
+                  setSubject('');
+                  setCourseText('');
+                }}
+                style={{
+                  width: '100%',
+                  padding: 16,
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
+                  color: '#fff',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Nouvelle épreuve
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
 // ═══════════════════════════════════════════════════════════════════════════════
 // ÉCRAN CHAT
 // ═══════════════════════════════════════════════════════════════════════════════
