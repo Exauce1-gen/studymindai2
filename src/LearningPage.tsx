@@ -700,10 +700,6 @@ function SummaryScreen() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function LearningPage() {
-  const navigate = (path: string) => {
-    window.location.hash = path;
-  };
-
   const [tab, setTab] = useState<"summary" | "quiz" | "exam" | "chat" | "flashcards" | "planning">("summary");
 
   const tabs = [
@@ -716,7 +712,32 @@ export default function LearningPage() {
   ];
 
   return (
-    <div style={{minHeight: "100vh", background: "#07070f"}}>   {/* Bouton retour */}   <div style={{padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 12}}>     <button        onClick={() => navigate('#/dashboard')}       style={{         padding: "8px 16px",         borderRadius: 10,         border: "1px solid #333",         background: "#1a1a2e",         color: "#888",         fontSize: 14,         cursor: "pointer",         display: "flex",         alignItems: "center",         gap: 8       }}     >       ← Tableau de bord     </button>     <div style={{fontSize: 18, fontWeight: 700, color: "#e8e8f8"}}>       📚 Espace d'apprentissage     </div>   </div>    <div style={{borderBottom: "1px solid #333", padding: "16px 20px", display: "flex", gap: 8, overflowX: "auto"}}>
+    <div style={{minHeight: "100vh", background: "#07070f"}}>
+      {/* Bouton retour */}
+      <div style={{padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 12}}>
+        <button 
+          onClick={() => window.location.hash = '#/dashboard'}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 10,
+            border: "1px solid #333",
+            background: "#1a1a2e",
+            color: "#888",
+            fontSize: 14,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 8
+          }}
+        >
+          ← Tableau de bord
+        </button>
+        <div style={{fontSize: 18, fontWeight: 700, color: "#e8e8f8"}}>
+          📚 Espace d'apprentissage
+        </div>
+      </div>
+
+      {/* Tabs */}
       <div style={{borderBottom: "1px solid #333", padding: "16px 20px", display: "flex", gap: 8, overflowX: "auto"}}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id as any)}
@@ -726,6 +747,7 @@ export default function LearningPage() {
         ))}
       </div>
 
+      {/* Contenu */}
       <div>
         {tab === "summary" && <SummaryScreen />}
         {tab === "quiz" && <QuizScreen />}
