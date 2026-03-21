@@ -716,23 +716,19 @@ export default function LearningPage() {
       {/* Bouton retour */}
       <div style={{padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 12}}>
         <button 
-         <button 
-  onClick={() => window.location.href = '/'}
-  style={{
-    padding: "8px 16px",
-    borderRadius: 10,
-    border: "1px solid #333",
-    background: "#1a1a2e",
-    color: "#888",
-    fontSize: 14,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 8
-  }}
->
-  ← Tableau de bord
-</button>
+          onClick={() => { window.location.href = '/'; }}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 10,
+            border: "1px solid #333",
+            background: "#1a1a2e",
+            color: "#888",
+            fontSize: 14,
+            cursor: "pointer"
+          }}
+        >
+          ← Tableau de bord
+        </button>
         <div style={{fontSize: 18, fontWeight: 700, color: "#e8e8f8"}}>
           📚 Espace d'apprentissage
         </div>
@@ -741,8 +737,21 @@ export default function LearningPage() {
       {/* Tabs */}
       <div style={{borderBottom: "1px solid #333", padding: "16px 20px", display: "flex", gap: 8, overflowX: "auto"}}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id as any)}
-            style={{padding: "10px 20px", borderRadius: 10, border: tab === t.id ? "1px solid #6C5CE7" : "1px solid #333", background: tab === t.id ? "#6C5CE715" : "#1a1a2e", color: tab === t.id ? "#6C5CE7" : "#888", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap"}}>
+          <button 
+            key={t.id} 
+            onClick={() => setTab(t.id as any)}
+            style={{
+              padding: "10px 20px", 
+              borderRadius: 10, 
+              border: tab === t.id ? "1px solid #6C5CE7" : "1px solid #333", 
+              background: tab === t.id ? "#6C5CE715" : "#1a1a2e", 
+              color: tab === t.id ? "#6C5CE7" : "#888", 
+              fontSize: 14, 
+              fontWeight: 600, 
+              cursor: "pointer", 
+              whiteSpace: "nowrap"
+            }}
+          >
             {t.icon} {t.name}
           </button>
         ))}
