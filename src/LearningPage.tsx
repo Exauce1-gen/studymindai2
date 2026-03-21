@@ -716,22 +716,23 @@ export default function LearningPage() {
       {/* Bouton retour */}
       <div style={{padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 12}}>
         <button 
-          <button onClick={() => window.history.back()}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 10,
-            border: "1px solid #333",
-            background: "#1a1a2e",
-            color: "#888",
-            fontSize: 14,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 8
-          }}
-        >
-          ← Tableau de bord
-        </button>
+         <button 
+  onClick={() => window.location.href = '/'}
+  style={{
+    padding: "8px 16px",
+    borderRadius: 10,
+    border: "1px solid #333",
+    background: "#1a1a2e",
+    color: "#888",
+    fontSize: 14,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: 8
+  }}
+>
+  ← Tableau de bord
+</button>
         <div style={{fontSize: 18, fontWeight: 700, color: "#e8e8f8"}}>
           📚 Espace d'apprentissage
         </div>
