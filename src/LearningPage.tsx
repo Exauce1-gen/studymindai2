@@ -716,7 +716,7 @@ export default function LearningPage() {
       {/* Bouton retour */}
       <div style={{padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 12}}>
         <button 
-          onClick={() => window.location.hash = '#/dashboard'}
+          <button onClick={() => window.history.back()}
           style={{
             padding: "8px 16px",
             borderRadius: 10,
