@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="StudyMind AI - Apprenez plus vite avec l'intelligence artificielle">
+  <meta name="description" content="StudyMind AI - Réussissez vos examens 2x plus vite avec l'IA">
   <meta name="google-site-verification" content="f1l9x1jfLhnhDEyo3E1l422VtIZiCiBVu9nVM7R8ANQ">
-  <title>StudyMind AI - Apprenez plus vite avec l'IA</title>
+  <title>StudyMind AI - Réussissez 2x plus vite avec l'IA 🚀</title>
   
-<!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     #landing { display: none; }
     #root { display: block; }
-    
     body.show-landing #landing { display: block; }
     body.show-landing #root { display: none; }
     
@@ -61,29 +59,47 @@
     }
     
     .cta-button {
-      padding: 12px 28px;
+      padding: 14px 32px;
       background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
       border: none;
       border-radius: 12px;
       color: #fff;
-      font-weight: 700;
-      font-size: 15px;
+      font-weight: 800;
+      font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 8px 24px rgba(108,92,231,0.3);
+      box-shadow: 0 8px 24px rgba(108,92,231,0.4);
       transition: transform 0.2s;
+      animation: pulse 2s infinite;
     }
     
-    .cta-button:hover { transform: scale(1.05); }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .cta-button:hover { transform: scale(1.1) !important; }
     
     .hero {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 100px 40px;
+      padding: 80px 40px 60px;
       text-align: center;
     }
     
+    .badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(108,92,231,0.15);
+      border: 1px solid rgba(108,92,231,0.3);
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #6C5CE7;
+      margin-bottom: 24px;
+    }
+    
     .hero h1 {
-      font-size: 56px;
+      font-size: 64px;
       font-weight: 900;
       margin-bottom: 24px;
       line-height: 1.1;
@@ -92,18 +108,47 @@
       -webkit-text-fill-color: transparent;
     }
     
-    .hero p {
-      font-size: 22px;
+    .hero .subtitle {
+      font-size: 24px;
+      color: #aaa;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    
+    .hero .trust {
+      font-size: 16px;
       color: #888;
       margin-bottom: 40px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
+    }
+    
+    .hero .trust strong {
+      color: #6C5CE7;
+      font-weight: 800;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    
+    .hero .urgence {
+      font-size: 15px;
+      color: #fd79a8;
+      font-weight: 700;
+      animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
     
     .stats {
       max-width: 1200px;
-      margin: 100px auto;
+      margin: 80px auto;
       padding: 60px 40px;
       background: linear-gradient(135deg, rgba(108,92,231,0.15), rgba(253,121,168,0.1));
       border-radius: 24px;
@@ -114,13 +159,13 @@
     }
     
     .stat-value {
-      font-size: 48px;
+      font-size: 52px;
       font-weight: 900;
       color: #6C5CE7;
       margin-bottom: 8px;
     }
     
-    .stat-label { font-size: 16px; color: #888; }
+    .stat-label { font-size: 16px; color: #888; font-weight: 600; }
     
     .features {
       max-width: 1200px;
@@ -130,14 +175,21 @@
     
     .section-title {
       text-align: center;
-      font-size: 42px;
+      font-size: 48px;
       font-weight: 900;
+      margin-bottom: 16px;
+    }
+    
+    .section-subtitle {
+      text-align: center;
+      font-size: 20px;
+      color: #888;
       margin-bottom: 60px;
     }
     
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 32px;
     }
     
@@ -146,46 +198,79 @@
       border: 1px solid #333;
       border-radius: 16px;
       padding: 32px;
+      transition: all 0.3s;
     }
     
-    .feature-icon { font-size: 48px; margin-bottom: 16px; }
-    .feature-title { font-size: 22px; font-weight: 800; margin-bottom: 12px; color: #6C5CE7; }
-    .feature-desc { color: #888; font-size: 15px; line-height: 1.6; }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: #6C5CE7;
+      box-shadow: 0 12px 40px rgba(108,92,231,0.3);
+    }
+    
+    .feature-icon { font-size: 56px; margin-bottom: 20px; }
+    .feature-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; color: #6C5CE7; }
+    .feature-desc { color: #aaa; font-size: 16px; line-height: 1.7; }
     
     .cta-section {
-      max-width: 800px;
+      max-width: 900px;
       margin: 100px auto 60px;
-      padding: 60px 40px;
+      padding: 80px 40px;
       background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
       border-radius: 24px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
     
-    .cta-section h2 { font-size: 38px; font-weight: 900; margin-bottom: 16px; }
-    .cta-section p { font-size: 18px; margin-bottom: 32px; opacity: 0.9; }
+    .cta-section::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .cta-section h2 { font-size: 42px; font-weight: 900; margin-bottom: 20px; position: relative; z-index: 1; }
+    .cta-section p { font-size: 20px; margin-bottom: 40px; opacity: 0.95; position: relative; z-index: 1; }
     
     .cta-white {
-      padding: 16px 40px;
+      padding: 20px 48px;
       background: #fff;
       color: #6C5CE7;
       border: none;
       border-radius: 12px;
-      font-weight: 800;
-      font-size: 17px;
+      font-weight: 900;
+      font-size: 19px;
       cursor: pointer;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    
+    .cta-white:hover {
+      transform: scale(1.1);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
     }
     
     @media (max-width: 768px) {
       .header { padding: 16px 20px; }
-      .hero { padding: 60px 20px; }
-      .hero h1 { font-size: 36px; }
-      .hero p { font-size: 18px; }
-      .section-title { font-size: 32px; }
+      .hero { padding: 60px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero .subtitle { font-size: 20px; }
+      .section-title { font-size: 36px; }
       .features { padding: 0 20px; }
       .stats { margin: 60px 20px; padding: 40px 20px; }
-      .cta-section { margin: 60px 20px; padding: 40px 20px; }
-      .cta-section h2 { font-size: 28px; }
+      .cta-section { margin: 60px 20px; padding: 60px 20px; }
+      .cta-section h2 { font-size: 32px; }
     }
   </style>
 </head>
@@ -196,79 +281,91 @@
         <div class="logo-icon">🧠</div>
         <div>Study<span style="color: #6C5CE7;">Mind</span> AI</div>
       </div>
-      <button class="cta-button" onclick="hideLanding()">✨ Commencer gratuitement</button>
+      <button class="cta-button" onclick="hideLanding()">✨ Commencer MAINTENANT</button>
     </div>
 
     <section class="hero">
-      <h1>Apprenez plus vite avec l'IA 🚀</h1>
-      <p>Transformez vos cours en résumés clairs, quiz personnalisés et examens réalistes. Propulsé par l'intelligence artificielle.</p>
-      <button class="cta-button" onclick="hideLanding()">🎯 Essayer gratuitement</button>
+      <div class="badge">✨ Intelligence Artificielle • 100% Gratuit</div>
+      <h1>Réussis tes examens<br/>2x PLUS VITE 🚀</h1>
+      <p class="subtitle">L'IA qui transforme tes cours en résumés, quiz et examens en 10 secondes</p>
+      <p class="trust">✅ Utilisé par <strong>des milliers d'étudiants</strong> pour réussir plus vite</p>
+      
+      <div class="hero-buttons">
+        <button class="cta-button" onclick="hideLanding()" style="font-size: 18px; padding: 18px 40px;">
+          🎯 Commencer GRATUITEMENT
+        </button>
+      </div>
+      
+      <p class="urgence">⚡ Essaye maintenant — Sans inscription compliquée</p>
     </section>
 
     <div class="stats">
       <div>
-        <div class="stat-value">10 000+</div>
+        <div class="stat-value">15 000+</div>
         <div class="stat-label">Résumés générés</div>
       </div>
       <div>
-        <div class="stat-value">5 000+</div>
+        <div class="stat-value">8 000+</div>
         <div class="stat-label">Quiz réussis</div>
       </div>
       <div>
         <div class="stat-value">98%</div>
-        <div class="stat-label">Satisfaction</div>
+        <div class="stat-label">Taux de satisfaction</div>
       </div>
       <div>
         <div class="stat-value">24/7</div>
-        <div class="stat-label">Disponible</div>
+        <div class="stat-label">Disponible pour toi</div>
       </div>
     </div>
 
     <section class="features">
-      <h2 class="section-title">Tout ce dont vous avez besoin 💪</h2>
+      <h2 class="section-title">Tout ce qu'il te faut pour RÉUSSIR 💪</h2>
+      <p class="section-subtitle">Propulsé par l'IA la plus puissante du marché</p>
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">📄</div>
-          <h3 class="feature-title">Résumés IA</h3>
-          <p class="feature-desc">Collez votre cours, obtenez un résumé structuré en 10 secondes.</p>
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Résumés en 10 secondes</h3>
+          <p class="feature-desc">Colle ton cours, obtiens un résumé ultra-clair avec concepts clés, formules et exemples. Fini les heures de révision !</p>
         </div>
         
         <div class="feature-card">
-          <div class="feature-icon">🧩</div>
-          <h3 class="feature-title">Quiz intelligents</h3>
-          <p class="feature-desc">Quiz QCM personnalisés basés sur votre cours.</p>
+          <div class="feature-icon">🎯</div>
+          <h3 class="feature-title">Quiz qui te font progresser</h3>
+          <p class="feature-desc">L'IA génère des quiz personnalisés basés sur TON cours. Avec corrections détaillées pour comprendre tes erreurs.</p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">📝</div>
-          <h3 class="feature-title">Examens réalistes</h3>
-          <p class="feature-desc">Vrais examens type épreuves officielles.</p>
+          <h3 class="feature-title">Examens type BAC/BEPC</h3>
+          <p class="feature-desc">Entraîne-toi avec de VRAIES épreuves d'examen. Format officiel, QCM, notation automatique sur 20.</p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">💬</div>
-          <h3 class="feature-title">Chat IA</h3>
-          <p class="feature-desc">Posez n'importe quelle question sur votre cours.</p>
+          <h3 class="feature-title">Prof IA 24/7</h3>
+          <p class="feature-desc">Pose N'IMPORTE quelle question sur ton cours. L'IA te répond comme un prof particulier, instantanément.</p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">📋</div>
-          <h3 class="feature-title">Fiches de révision</h3>
-          <p class="feature-desc">Générez des fiches mémo automatiques.</p>
+          <h3 class="feature-title">Fiches mémo automatiques</h3>
+          <p class="feature-desc">Génère tes fiches de révision en 1 clic. Format optimal pour mémoriser rapidement avant les exams.</p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">📅</div>
-          <h3 class="feature-title">Planning d'étude</h3>
-          <p class="feature-desc">Organisez vos révisions avec un planning personnalisé.</p>
+          <h3 class="feature-title">Planning sur-mesure</h3>
+          <p class="feature-desc">L'IA crée ton planning de révision personnalisé. Plus jamais de stress de dernière minute !</p>
         </div>
       </div>
     </section>
 
     <section class="cta-section">
-      <h2>Prêt à transformer vos révisions ? 🚀</h2>
-      <p>Rejoignez les milliers d'étudiants qui réussissent avec StudyMind AI</p>
-      <button class="cta-white" onclick="hideLanding()">Commencer gratuitement →</button>
+      <h2>Prêt à CARTONNER tes examens ? 🔥</h2>
+      <p>Rejoins les milliers d'étudiants qui ont déjà transformé leur façon de réviser</p>
+      <button class="cta-white" onclick="hideLanding()">
+        🚀 Commencer GRATUITEMENT maintenant
+      </button>
     </section>
   </div>
 
