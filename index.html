@@ -126,14 +126,6 @@
       font-weight: 800;
     }
     
-    .hero-buttons {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-    
     .hero .urgence {
       font-size: 15px;
       color: #fd79a8;
@@ -261,6 +253,23 @@
       box-shadow: 0 16px 48px rgba(0,0,0,0.4);
     }
     
+    footer {
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid #333;
+      margin-top: 60px;
+    }
+    
+    footer a {
+      color: #6C5CE7;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
     @media (max-width: 768px) {
       .header { padding: 16px 20px; }
       .hero { padding: 60px 20px 40px; }
@@ -290,12 +299,10 @@
       <p class="subtitle">L'IA qui transforme tes cours en résumés, quiz et examens en 10 secondes</p>
       <p class="trust">✅ Utilisé par <strong>des milliers d'étudiants</strong> pour réussir plus vite</p>
       
-      <div class="hero-buttons">
-        <button class="cta-button" onclick="hideLanding()" style="font-size: 18px; padding: 18px 40px;">
-          🎯 Commencer GRATUITEMENT
-        </button>
-      </div>
-      
+      <button class="cta-button" onclick="hideLanding()" style="font-size: 18px; padding: 18px 40px;">
+        🎯 Commencer GRATUITEMENT
+      </button>
+      <br><br>
       <p class="urgence">⚡ Essaye maintenant — Sans inscription compliquée</p>
     </section>
 
@@ -367,6 +374,17 @@
         🚀 Commencer GRATUITEMENT maintenant
       </button>
     </section>
+
+    <footer>
+      <div style="color: #666; font-size: 14px; margin-bottom: 16px;">
+        © 2026 StudyMind AI - Tous droits réservés - TOVI Exauce
+      </div>
+      <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+        <a href="/privacy-policy.html">Politique de confidentialité</a>
+        <a href="/terms-of-service.html">Conditions d'utilisation</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+    </footer>
   </div>
 
   <div id="root"></div>
