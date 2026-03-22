@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from './supabaseClient';
-import { User } from '@supabase/supabase-js';
+import { createClient, User } from '@supabase/supabase-js';
+
+// Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface UserProfile {
   id: string;
@@ -34,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -43,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -105,10 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('users')
         .update(updates)
         .eq('id', user.id);
-      
+
       if (error) throw error;
-      
-      setUserProfile(prev => prev ? { ...prev, ...updates } : null);
+
+      // Refresh profile
+      await fetchUserProfile(user.id);
     } catch (error) {
       console.error('Error updating profile:', error);
     }
