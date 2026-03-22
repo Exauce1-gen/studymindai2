@@ -5,8 +5,11 @@ import { User } from '@supabase/supabase-js';
 interface UserProfile {
   id: string;
   email: string;
+  first_name?: string;
   full_name?: string;
   date_of_birth?: string;
+  grade?: string;
+  subjects?: string[];
   onboarding_completed: boolean;
   is_premium: boolean;
   created_at: string;
@@ -20,6 +23,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -40,7 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -95,6 +97,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      setUserProfile(prev => prev ? { ...prev, ...updates } : null);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -106,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
+    updateUserProfile,
     signOut
   };
 
