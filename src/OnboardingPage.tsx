@@ -6,6 +6,7 @@ export default function OnboardingPage() {
   const { user, userProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
   
   // Step 1: Infos personnelles
   const [firstName, setFirstName] = useState('');
@@ -52,36 +53,89 @@ export default function OnboardingPage() {
   };
 
   const handleFinish = async () => {
-    if (!user) return;
+    if (!user) {
+      setDebugInfo('❌ ERREUR: Pas d\'utilisateur connecté');
+      return;
+    }
     
     setLoading(true);
+    setDebugInfo('🔄 Début de l\'enregistrement...');
     
     try {
-      // Mettre à jour le profil utilisateur
-      const { error } = await supabase
-        .from('users')
-        .update({
-          first_name: firstName,
-          date_of_birth: dateOfBirth,
-          grade: grade,
-          subjects: subjects,
-          onboarding_completed: true
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Erreur update:', error);
-        alert('Erreur lors de l\'enregistrement. Réessayez.');
-        setLoading(false);
-        return;
-      }
-
-      // Recharger la page pour que AuthContext récupère le nouveau profil
-      window.location.reload();
+      // Log des données
+      const dataToUpdate = {
+        first_name: firstName,
+        date_of_birth: dateOfBirth,
+        grade: grade,
+        subjects: subjects,
+        onboarding_completed: true
+      };
       
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Erreur lors de l\'enregistrement. Réessayez.');
+      setDebugInfo(`📦 Données à enregistrer:\n${JSON.stringify(dataToUpdate, null, 2)}\n\n🔑 User ID: ${user.id}`);
+      
+      // Vérifier si l'utilisateur existe dans la table
+      setDebugInfo(prev => prev + '\n\n🔍 Vérification de l\'utilisateur...');
+      
+      const { data: existingUser, error: selectError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (selectError) {
+        setDebugInfo(prev => prev + `\n\n❌ ERREUR SELECT: ${selectError.message}\nCode: ${selectError.code}\nDétails: ${JSON.stringify(selectError, null, 2)}`);
+        
+        // Si l'utilisateur n'existe pas, le créer
+        if (selectError.code === 'PGRST116') {
+          setDebugInfo(prev => prev + '\n\n📝 Utilisateur n\'existe pas, création...');
+          
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: user.id,
+              email: user.email,
+              ...dataToUpdate
+            });
+          
+          if (insertError) {
+            setDebugInfo(prev => prev + `\n\n❌ ERREUR INSERT: ${insertError.message}\nCode: ${insertError.code}\nDétails: ${JSON.stringify(insertError, null, 2)}`);
+            setLoading(false);
+            return;
+          }
+          
+          setDebugInfo(prev => prev + '\n\n✅ Utilisateur créé avec succès !');
+        } else {
+          setLoading(false);
+          return;
+        }
+      } else {
+        setDebugInfo(prev => prev + `\n\n✅ Utilisateur trouvé: ${existingUser.email}`);
+        
+        // Mettre à jour l'utilisateur existant
+        setDebugInfo(prev => prev + '\n\n🔄 Mise à jour du profil...');
+        
+        const { error: updateError } = await supabase
+          .from('users')
+          .update(dataToUpdate)
+          .eq('id', user.id);
+        
+        if (updateError) {
+          setDebugInfo(prev => prev + `\n\n❌ ERREUR UPDATE: ${updateError.message}\nCode: ${updateError.code}\nDétails: ${JSON.stringify(updateError, null, 2)}`);
+          setLoading(false);
+          return;
+        }
+        
+        setDebugInfo(prev => prev + '\n\n✅ Profil mis à jour avec succès !');
+      }
+      
+      // Recharger la page
+      setDebugInfo(prev => prev + '\n\n🔄 Rechargement de la page...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+    } catch (error: any) {
+      setDebugInfo(prev => prev + `\n\n❌ ERREUR CATCH: ${error.message}\n${JSON.stringify(error, null, 2)}`);
       setLoading(false);
     }
   };
@@ -129,6 +183,25 @@ export default function OnboardingPage() {
             Personnalisons votre expérience
           </p>
         </div>
+
+        {/* Debug Info */}
+        {debugInfo && (
+          <div style={{
+            marginBottom: 20,
+            padding: 16,
+            background: '#1a1a2e',
+            border: '1px solid #333',
+            borderRadius: 12,
+            fontSize: 12,
+            color: '#aaa',
+            whiteSpace: 'pre-wrap',
+            maxHeight: 300,
+            overflowY: 'auto',
+            fontFamily: 'monospace'
+          }}>
+            {debugInfo}
+          </div>
+        )}
 
         {/* Progress */}
         <div style={{display: 'flex', gap: 8, marginBottom: 32}}>
