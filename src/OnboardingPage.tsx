@@ -1,376 +1,365 @@
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
-
-const GRADES = [
-  '6ème', '5ème', '4ème', '3ème',
-  'Seconde', 'Première', 'Terminale',
-  'Université', 'Autre'
-];
-
-const SUBJECTS = [
-  'Mathématiques', 'Physique-Chimie', 'SVT',
-  'Français', 'Histoire-Géographie', 'Anglais',
-  'Espagnol', 'Philosophie', 'Économie',
-  'Informatique', 'Arts', 'Sport'
-];
+import { supabase } from './AuthContext';
 
 export default function OnboardingPage() {
-  const { updateUserProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   
-  // Form data
+  // Step 1: Infos personnelles
   const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  
+  // Step 2: Niveau scolaire
   const [grade, setGrade] = useState('');
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  
+  // Step 3: Matières
+  const [subjects, setSubjects] = useState<string[]>([]);
+
+  const grades = [
+    { id: '6eme', name: '6ème' },
+    { id: '5eme', name: '5ème' },
+    { id: '4eme', name: '4ème' },
+    { id: '3eme', name: '3ème' },
+    { id: 'seconde', name: 'Seconde' },
+    { id: 'premiere', name: 'Première' },
+    { id: 'terminale', name: 'Terminale' },
+    { id: 'superieur', name: 'Études supérieures' }
+  ];
+
+  const availableSubjects = [
+    '📐 Mathématiques',
+    '⚗️ Physique-Chimie',
+    '🧬 SVT',
+    '🌍 Histoire-Géographie',
+    '📚 Français',
+    '🗣️ Anglais',
+    '🇪🇸 Espagnol',
+    '🇩🇪 Allemand',
+    '🤔 Philosophie',
+    '💼 Économie',
+    '💻 Informatique',
+    '🎨 Arts'
+  ];
 
   const toggleSubject = (subject: string) => {
-    if (selectedSubjects.includes(subject)) {
-      setSelectedSubjects(selectedSubjects.filter(s => s !== subject));
+    if (subjects.includes(subject)) {
+      setSubjects(subjects.filter(s => s !== subject));
     } else {
-      setSelectedSubjects([...selectedSubjects, subject]);
+      setSubjects([...subjects, subject]);
     }
   };
 
-  const handleNext = () => {
-    if (step === 1 && (!firstName || !lastName)) {
-      alert('Veuillez entrer votre nom et prénom');
-      return;
-    }
-    if (step === 2 && (!age || !gender)) {
-      alert('Veuillez remplir tous les champs');
-      return;
-    }
-    if (step === 3 && !grade) {
-      alert('Veuillez sélectionner votre classe');
-      return;
-    }
+  const handleFinish = async () => {
+    if (!user) return;
     
-    if (step < 4) {
-      setStep(step + 1);
-    } else {
-      handleComplete();
-    }
-  };
-
-  const handleComplete = async () => {
-    if (selectedSubjects.length < 3) {
-      alert('Sélectionne au moins 3 matières');
-      return;
-    }
-
+    setLoading(true);
+    
     try {
-      setLoading(true);
+      // Mettre à jour le profil utilisateur
+      const { error } = await supabase
+        .from('users')
+        .update({
+          first_name: firstName,
+          date_of_birth: dateOfBirth,
+          grade: grade,
+          subjects: subjects,
+          onboarding_completed: true
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Erreur update:', error);
+        alert('Erreur lors de l\'enregistrement. Réessayez.');
+        setLoading(false);
+        return;
+      }
+
+      // Recharger la page pour que AuthContext récupère le nouveau profil
+      window.location.reload();
       
-      // Cast explicite pour éviter erreurs TypeScript
-      await updateUserProfile({
-        first_name: firstName,
-        last_name: lastName,
-        display_name: `${firstName} ${lastName}`,
-        age: parseInt(age) || 0,
-        gender: gender || '',
-        grade: grade || '',
-        subjects: selectedSubjects,
-        onboarding_completed: true
-      } as any);
-      
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur:', error);
+      alert('Erreur lors de l\'enregistrement. Réessayez.');
       setLoading(false);
-      alert(`Erreur: ${error?.message || 'Réessayez'}`);
     }
   };
 
-  const progress = (step / 4) * 100;
+  const canProceedStep1 = firstName.trim() && dateOfBirth;
+  const canProceedStep2 = grade;
+  const canFinish = subjects.length >= 3;
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#07070f',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 20
     }}>
       <div style={{
-        background: '#fff',
-        borderRadius: 24,
-        padding: 40,
-        maxWidth: 520,
         width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        maxWidth: 600,
+        background: '#0e0e1d',
+        border: '1px solid #333',
+        borderRadius: 20,
+        padding: 40
       }}>
-        {/* Progress bar */}
-        <div style={{marginBottom: 32}}>
+        {/* Header */}
+        <div style={{textAlign: 'center', marginBottom: 32}}>
           <div style={{
-            height: 6,
-            background: '#e0e0e0',
-            borderRadius: 10,
-            overflow: 'hidden'
+            width: 80,
+            height: 80,
+            background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+            borderRadius: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 40,
+            margin: '0 auto 16px'
           }}>
-            <div style={{
-              height: '100%',
-              background: 'linear-gradient(90deg, #6C5CE7, #8b5cf6)',
-              width: `${progress}%`,
-              transition: 'width 0.3s'
-            }}/>
+            🧠
           </div>
-          <p style={{
-            textAlign: 'center',
-            color: '#666',
-            fontSize: 13,
-            marginTop: 12,
-            fontWeight: 600
-          }}>
-            Étape {step} sur 4
+          <h1 style={{fontSize: 28, fontWeight: 800, color: '#e8e8f8', marginBottom: 8}}>
+            Bienvenue sur Study<span style={{color: '#6C5CE7'}}>Mind</span> AI
+          </h1>
+          <p style={{color: '#888', fontSize: 14}}>
+            Personnalisons votre expérience
           </p>
         </div>
 
-        {/* Step 1: Nom et Prénom */}
+        {/* Progress */}
+        <div style={{display: 'flex', gap: 8, marginBottom: 32}}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{
+              flex: 1,
+              height: 4,
+              background: i <= step ? '#6C5CE7' : '#333',
+              borderRadius: 2,
+              transition: 'all 0.3s'
+            }} />
+          ))}
+        </div>
+
+        {/* Step 1: Infos personnelles */}
         {step === 1 && (
           <div>
-            <h2 style={{fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 8}}>
-              👋 Bienvenue !
+            <h2 style={{fontSize: 22, fontWeight: 700, color: '#e8e8f8', marginBottom: 24}}>
+              📝 Vos informations
             </h2>
-            <p style={{color: '#666', marginBottom: 32, lineHeight: 1.6}}>
-              Pour commencer, dis-nous comment tu t'appelles
-            </p>
+            
+            <label style={{display: 'block', color: '#aaa', fontSize: 14, marginBottom: 8}}>
+              Prénom
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Entrez votre prénom"
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 12,
+                border: '1px solid #333',
+                background: '#1a1a2e',
+                color: '#fff',
+                fontSize: 15,
+                outline: 'none',
+                marginBottom: 20
+              }}
+            />
 
-            <div style={{marginBottom: 20}}>
-              <label style={{display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 8}}>
-                Prénom
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="Ex: Marie"
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  outline: 'none'
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = '#6C5CE7'}
-                onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
-              />
-            </div>
+            <label style={{display: 'block', color: '#aaa', fontSize: 14, marginBottom: 8}}>
+              Date de naissance
+            </label>
+            <input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 12,
+                border: '1px solid #333',
+                background: '#1a1a2e',
+                color: '#fff',
+                fontSize: 15,
+                outline: 'none',
+                marginBottom: 24
+              }}
+            />
 
-            <div style={{marginBottom: 20}}>
-              <label style={{display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 8}}>
-                Nom
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Ex: Dubois"
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  outline: 'none'
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = '#6C5CE7'}
-                onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
-              />
-            </div>
+            <button
+              onClick={() => setStep(2)}
+              disabled={!canProceedStep1}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 12,
+                border: 'none',
+                background: canProceedStep1 ? 'linear-gradient(135deg, #6C5CE7, #8b5cf6)' : '#444',
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: canProceedStep1 ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Continuer →
+            </button>
           </div>
         )}
 
-        {/* Step 2: Âge et Genre */}
+        {/* Step 2: Niveau scolaire */}
         {step === 2 && (
           <div>
-            <h2 style={{fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 8}}>
-              📊 Quelques infos
+            <h2 style={{fontSize: 22, fontWeight: 700, color: '#e8e8f8', marginBottom: 24}}>
+              🎓 Votre niveau scolaire
             </h2>
-            <p style={{color: '#666', marginBottom: 32, lineHeight: 1.6}}>
-              Cela nous aide à personnaliser ton expérience
-            </p>
 
-            <div style={{marginBottom: 20}}>
-              <label style={{display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 8}}>
-                Âge
-              </label>
-              <input
-                type="number"
-                value={age}
-                onChange={e => setAge(e.target.value)}
-                placeholder="Ex: 15"
-                min="10"
-                max="99"
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  outline: 'none'
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = '#6C5CE7'}
-                onBlur={e => e.currentTarget.style.borderColor = '#e0e0e0'}
-              />
-            </div>
-
-            <div>
-              <label style={{display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 12}}>
-                Genre
-              </label>
-              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10}}>
-                {[
-                  ['male', '👨 Homme'],
-                  ['female', '👩 Femme'],
-                  ['other', '🌈 Autre']
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setGender(value as any)}
-                    style={{
-                      padding: '14px 12px',
-                      border: gender === value ? '2px solid #6C5CE7' : '2px solid #e0e0e0',
-                      borderRadius: 12,
-                      background: gender === value ? 'rgba(108,92,231,0.1)' : '#fff',
-                      color: gender === value ? '#6C5CE7' : '#666',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Classe */}
-        {step === 3 && (
-          <div>
-            <h2 style={{fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 8}}>
-              🎓 Ta classe
-            </h2>
-            <p style={{color: '#666', marginBottom: 24, lineHeight: 1.6}}>
-              Sélectionne ta classe actuelle
-            </p>
-
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10}}>
-              {GRADES.map(g => (
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24}}>
+              {grades.map(g => (
                 <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGrade(g)}
+                  key={g.id}
+                  onClick={() => setGrade(g.id)}
                   style={{
-                    padding: '14px 16px',
-                    border: grade === g ? '2px solid #6C5CE7' : '2px solid #e0e0e0',
+                    padding: 16,
                     borderRadius: 12,
-                    background: grade === g ? 'rgba(108,92,231,0.1)' : '#fff',
-                    color: grade === g ? '#6C5CE7' : '#666',
+                    border: grade === g.id ? '2px solid #6C5CE7' : '1px solid #333',
+                    background: grade === g.id ? 'rgba(108,92,231,0.15)' : '#1a1a2e',
+                    color: grade === g.id ? '#6C5CE7' : '#aaa',
                     fontSize: 15,
-                    fontWeight: 600,
+                    fontWeight: grade === g.id ? 700 : 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
                 >
-                  {g}
+                  {g.name}
                 </button>
               ))}
+            </div>
+
+            <div style={{display: 'flex', gap: 12}}>
+              <button
+                onClick={() => setStep(1)}
+                style={{
+                  flex: 1,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: '1px solid #333',
+                  background: '#1a1a2e',
+                  color: '#aaa',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                ← Retour
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={!canProceedStep2}
+                style={{
+                  flex: 2,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: 'none',
+                  background: canProceedStep2 ? 'linear-gradient(135deg, #6C5CE7, #8b5cf6)' : '#444',
+                  color: '#fff',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: canProceedStep2 ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Continuer →
+              </button>
             </div>
           </div>
         )}
 
-        {/* Step 4: Matières */}
-        {step === 4 && (
+        {/* Step 3: Matières */}
+        {step === 3 && (
           <div>
-            <h2 style={{fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 8}}>
-              📚 Tes matières
+            <h2 style={{fontSize: 22, fontWeight: 700, color: '#e8e8f8', marginBottom: 8}}>
+              📚 Vos matières
             </h2>
-            <p style={{color: '#666', marginBottom: 24, lineHeight: 1.6}}>
-              Sélectionne tes matières préférées (au moins 3)
+            <p style={{color: '#888', fontSize: 14, marginBottom: 24}}>
+              Sélectionnez au moins 3 matières
             </p>
 
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8}}>
-              {SUBJECTS.map(subject => (
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24}}>
+              {availableSubjects.map(subject => (
                 <button
                   key={subject}
-                  type="button"
                   onClick={() => toggleSubject(subject)}
                   style={{
-                    padding: '12px 14px',
-                    border: selectedSubjects.includes(subject) ? '2px solid #6C5CE7' : '2px solid #e0e0e0',
-                    borderRadius: 10,
-                    background: selectedSubjects.includes(subject) ? 'rgba(108,92,231,0.1)' : '#fff',
-                    color: selectedSubjects.includes(subject) ? '#6C5CE7' : '#666',
-                    fontSize: 13,
-                    fontWeight: 600,
+                    padding: 16,
+                    borderRadius: 12,
+                    border: subjects.includes(subject) ? '2px solid #6C5CE7' : '1px solid #333',
+                    background: subjects.includes(subject) ? 'rgba(108,92,231,0.15)' : '#1a1a2e',
+                    color: subjects.includes(subject) ? '#6C5CE7' : '#aaa',
+                    fontSize: 15,
+                    fontWeight: subjects.includes(subject) ? 700 : 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     textAlign: 'left'
                   }}
                 >
-                  {selectedSubjects.includes(subject) ? '✓ ' : ''}{subject}
+                  {subject}
                 </button>
               ))}
             </div>
+
+            <div style={{
+              padding: 12,
+              background: canFinish ? 'rgba(0,184,148,0.1)' : 'rgba(253,121,168,0.1)',
+              border: `1px solid ${canFinish ? '#00b894' : '#fd79a8'}`,
+              borderRadius: 8,
+              color: canFinish ? '#00b894' : '#fd79a8',
+              fontSize: 14,
+              marginBottom: 24,
+              textAlign: 'center'
+            }}>
+              {subjects.length} / 3 matières minimum
+            </div>
+
+            <div style={{display: 'flex', gap: 12}}>
+              <button
+                onClick={() => setStep(2)}
+                style={{
+                  flex: 1,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: '1px solid #333',
+                  background: '#1a1a2e',
+                  color: '#aaa',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                ← Retour
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={!canFinish || loading}
+                style={{
+                  flex: 2,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: 'none',
+                  background: (canFinish && !loading) ? 'linear-gradient(135deg, #6C5CE7, #8b5cf6)' : '#444',
+                  color: '#fff',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: (canFinish && !loading) ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {loading ? '⏳ Enregistrement...' : '🚀 Commencer à apprendre'}
+              </button>
+            </div>
           </div>
-        )}
-
-        {/* Buttons */}
-        <div style={{display: 'flex', gap: 12, marginTop: 32}}>
-          {step > 1 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: '14px 20px',
-                border: '2px solid #e0e0e0',
-                borderRadius: 12,
-                background: '#fff',
-                color: '#666',
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              ← Retour
-            </button>
-          )}
-
-          <button
-            onClick={handleNext}
-            disabled={loading || (step === 4 && selectedSubjects.length < 3)}
-            style={{
-              flex: step > 1 ? 1 : undefined,
-              width: step === 1 ? '100%' : undefined,
-              padding: '14px 20px',
-              border: 'none',
-              borderRadius: 12,
-              background: loading || (step === 4 && selectedSubjects.length < 3) ? '#ccc' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
-              color: '#fff',
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: loading || (step === 4 && selectedSubjects.length < 3) ? 'not-allowed' : 'pointer',
-              boxShadow: loading ? 'none' : '0 6px 20px rgba(108,92,231,0.4)'
-            }}
-          >
-            {loading ? '⏳ Enregistrement...' : step === 4 ? '✨ Commencer à apprendre' : 'Suivant →'}
-          </button>
-        </div>
-
-        {step === 4 && selectedSubjects.length < 3 && (
-          <p style={{textAlign: 'center', color: '#999', fontSize: 12, marginTop: 12}}>
-            Sélectionne au moins 3 matières pour continuer
-          </p>
         )}
       </div>
     </div>
