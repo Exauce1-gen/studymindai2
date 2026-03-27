@@ -25,9 +25,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -89,40 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      return { error };
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  const updateUserProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Refresh profile
-      await fetchUserProfile(user.id);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-
   const signOut = async () => {
+    // Déconnexion Supabase
     await supabase.auth.signOut();
+    
+    // IMPORTANT: Effacer le localStorage pour montrer la landing page
+    localStorage.removeItem('hasSeenLanding');
+    
+    // Rediriger vers la page d'accueil (landing)
+    window.location.href = '/';
   };
 
   const value = {
@@ -131,8 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signInWithEmail,
     signUpWithEmail,
-    signInWithGoogle,
-    updateUserProfile,
     signOut
   };
 
