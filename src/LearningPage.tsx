@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useUsageLimit, incrementFeatureUsage } from './useUsageLimit';
 import { usePremium } from './usePremium';
+import { useAuth } from './AuthContext';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GROQ API
@@ -661,6 +662,7 @@ function SummaryScreen() {
   const [courseText, setCourseText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
   const { canUse, usageCount, maxUsage } = useUsageLimit('summary');
 const { isPremium } = usePremium();
 
@@ -682,7 +684,9 @@ const handleGenerate = async () => {
   setSummary(result);
 
   // ✅ Incrément usage (IMPORTANT)
+  if (user) {
   await incrementFeatureUsage(user.id, 'summary');
+}
 
   setLoading(false);
 };
