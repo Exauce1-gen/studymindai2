@@ -6,22 +6,11 @@ import DashboardPage from './DashboardPage';
 import LearningPage from './LearningPage';
 import PremiumPage from './PremiumPage';
 
-// Dans ton routing
-{!user ? (
-  <LoginPage />
-) : !userProfile?.onboarding_completed ? (
-  <OnboardingPage />
-) : window.location.pathname === '/premium' ? (
-  <PremiumPage />
-) : (
-  <DashboardPage />
-)}
-
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
   const [showLearning, setShowLearning] = useState(false);
 
-  // Loading state
+  // 🔄 Loading
   if (loading) {
     return (
       <div style={{
@@ -31,7 +20,7 @@ function AppContent() {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <div style={{textAlign: 'center'}}>
+        <div style={{ textAlign: 'center' }}>
           <div style={{
             width: 80,
             height: 80,
@@ -46,10 +35,11 @@ function AppContent() {
           }}>
             🧠
           </div>
-          <p style={{color: '#6C5CE7', fontSize: 16, fontWeight: 600}}>
+          <p style={{ color: '#6C5CE7', fontSize: 16, fontWeight: 600 }}>
             Chargement de StudyMind AI...
           </p>
         </div>
+
         <style>{`
           @keyframes pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
@@ -60,22 +50,30 @@ function AppContent() {
     );
   }
 
-  // Not logged in → Show Login Page directly
+  // 🔐 Non connecté
   if (!user) {
     return <LoginPage />;
   }
 
-  // Logged in but onboarding not completed → Show Onboarding
+  // 🧠 Onboarding non terminé
   if (!userProfile?.onboarding_completed) {
     return <OnboardingPage />;
   }
 
-  // Onboarding completed → Show Dashboard or Learning
+  // 💎 Page Premium via URL
+  if (window.location.pathname === '/premium') {
+    return <PremiumPage />;
+  }
+
+  // 📚 Mode apprentissage
   if (showLearning) {
     return <LearningPage />;
   }
 
-  return <DashboardPage onStartLearning={() => setShowLearning(true)} />;
+  // 🏠 Dashboard principal
+  return (
+    <DashboardPage onStartLearning={() => setShowLearning(true)} />
+  );
 }
 
 export default function App() {
