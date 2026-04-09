@@ -4,6 +4,18 @@ import LoginPage from './LoginPage';
 import OnboardingPage from './OnboardingPage';
 import DashboardPage from './DashboardPage';
 import LearningPage from './LearningPage';
+import PremiumPage from './PremiumPage';
+
+// Dans ton routing
+{!user ? (
+  <LoginPage />
+) : !userProfile?.onboarding_completed ? (
+  <OnboardingPage />
+) : window.location.pathname === '/premium' ? (
+  <PremiumPage />
+) : (
+  <DashboardPage />
+)}
 
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
