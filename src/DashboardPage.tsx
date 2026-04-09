@@ -87,17 +87,22 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             ✨ Premium
           </button>
           <button
-            onClick={signOut}
-            style={{
-              background: 'rgba(253,121,168,0.12)',
-              border: '1px solid rgba(253,121,168,0.3)',
-              padding: '6px 14px',
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#fd79a8',
-              cursor: 'pointer'
-            }}
+    onClick={() => window.location.href = '/premium'}
+    style={{
+      padding: '16px 32px',
+      background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+      border: 'none',
+      borderRadius: 12,
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 700,
+      cursor: 'pointer'
+    }}
+  >
+    💎 Passer à Premium
+  </button>
+)}
+
           >
             Déconnexion
           </button>
