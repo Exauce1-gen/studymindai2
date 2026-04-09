@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useUsageLimit, incrementFeatureUsage } from './useUsageLimit';
+import { usePremium } from './usePremium';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GROQ API
@@ -659,17 +661,31 @@ function SummaryScreen() {
   const [courseText, setCourseText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
+  const { canUse, usageCount, maxUsage } = useUsageLimit('summary');
+const { isPremium } = usePremium();
 
-  const handleGenerate = async () => {
-    if (!courseText.trim()) {
-      alert("Veuillez coller un cours.");
-      return;
-    }
-    setLoading(true);
-    const result = await generateSummary(courseText);
-    setSummary(result);
-    setLoading(false);
-  };
+const handleGenerate = async () => {
+  if (!courseText.trim()) {
+    alert("Veuillez coller un cours.");
+    return;
+  }
+
+  // ✅ Vérification limite
+  if (!canUse && !isPremium) {
+    alert(`Vous avez atteint la limite gratuite (${maxUsage}/jour). Passez à Premium !`);
+    return;
+  }
+
+  setLoading(true);
+
+  const result = await generateSummary(courseText);
+  setSummary(result);
+
+  // ✅ Incrément usage (IMPORTANT)
+  await incrementFeatureUsage(user.id, 'summary');
+
+  setLoading(false);
+};
 
   if (!summary) {
     return (
