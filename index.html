@@ -8,6 +8,17 @@
   <title>StudyMind AI - Réussissez 2x plus vite avec l'IA 🚀</title>
   <!-- FedaPay SDK -->
 <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+  <!-- PDF.js pour lire les PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  // Configuration PDF.js
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+
+<!-- Tesseract.js pour OCR (reconnaissance texte dans images) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
   
   <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
