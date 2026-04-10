@@ -1,13 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './AuthContext';
 import { usePremium } from './usePremium';
+
+// Déclarer FedaPay global
+declare global {
+  interface Window {
+    FedaPay: any;
+  }
+}
 
 export default function PremiumPage() {
   const { user, userProfile } = useAuth();
   const { isPremium } = usePremium();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
+  const [fedaPayReady, setFedaPayReady] = useState(false);
+
+  // Vérifier que FedaPay est chargé
+  useEffect(() => {
+    const checkFedaPay = setInterval(() => {
+      if (window.FedaPay) {
+        setFedaPayReady(true);
+        clearInterval(checkFedaPay);
+      }
+    }, 100);
+
+    // Timeout après 10 secondes
+    setTimeout(() => {
+      clearInterval(checkFedaPay);
+      if (!window.FedaPay) {
+        console.error('FedaPay SDK failed to load');
+      }
+    }, 10000);
+
+    return () => clearInterval(checkFedaPay);
+  }, []);
 
   const plans = {
     weekly: {
@@ -50,67 +78,69 @@ export default function PremiumPage() {
       return;
     }
 
+    if (!fedaPayReady || !window.FedaPay) {
+      alert('Chargement du système de paiement... Veuillez réessayer dans quelques secondes.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const plan = plans[selectedPlan];
       
-      // Initialiser FedaPay
-      // @ts-ignore
-      if (typeof FedaPay === 'undefined') {
-        alert('Erreur: FedaPay non chargé. Rechargez la page.');
+      // Configuration FedaPay
+      const publicKey = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY;
+      const environment = import.meta.env.VITE_FEDAPAY_ENVIRONMENT || 'sandbox';
+
+      if (!publicKey) {
+        alert('Erreur de configuration. Contactez le support.');
         setLoading(false);
         return;
       }
 
-      // IMPORTANT: Ces clés doivent être dans vos variables d'environnement Vercel
-      // VITE_FEDAPAY_PUBLIC_KEY (clé publique)
-      // VITE_FEDAPAY_SECRET_KEY (clé secrète - backend seulement)
-      
-      // @ts-ignore
-      FedaPay.setApiKey(import.meta.env.VITE_FEDAPAY_PUBLIC_KEY);
-      // @ts-ignore
-      FedaPay.setEnvironment(import.meta.env.VITE_FEDAPAY_ENVIRONMENT || 'sandbox'); // 'sandbox' ou 'live'
-
-      // Créer la transaction
-      // @ts-ignore
-      const transaction = await FedaPay.Transaction.create({
-        description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}`,
-        amount: plan.price,
-        currency: {
-          iso: 'XOF'
-        },
-        callback_url: `${window.location.origin}/payment-callback`,
-        customer: {
-          firstname: userProfile?.first_name || 'Utilisateur',
-          lastname: 'StudyMind',
-          email: user.email,
-          phone_number: {
-            number: '', // Optionnel
-            country: 'bj'
-          }
-        }
+      // Initialiser FedaPay avec la bonne syntaxe
+      window.FedaPay.init({
+        public_key: publicKey,
+        environment: environment // 'sandbox' ou 'live'
       });
 
-      // Sauvegarder la transaction dans Supabase pour vérification ultérieure
-      await supabase
+      // Créer la transaction
+      const transaction = {
+        amount: plan.price,
+        description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}`,
+        callback_url: `${window.location.origin}/payment-success`,
+        cancel_url: `${window.location.origin}/premium`,
+        customer: {
+          email: user.email,
+          firstname: userProfile?.first_name || 'Utilisateur',
+          lastname: 'StudyMind'
+        }
+      };
+
+      // Générer un ID unique pour la transaction
+      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Sauvegarder la transaction dans Supabase
+      const { error: dbError } = await supabase
         .from('transactions')
         .insert({
           user_id: user.id,
-          transaction_id: transaction.id,
+          transaction_id: transactionId,
           plan_type: selectedPlan,
           amount: plan.price,
           status: 'pending',
           created_at: new Date().toISOString()
         });
 
-      // Ouvrir le widget de paiement
-      // @ts-ignore
-      const token = transaction.generateToken();
-      // @ts-ignore
-      FedaPay.openWidget(token.token);
+      if (dbError) {
+        console.error('Erreur DB:', dbError);
+      }
+
+      // Ouvrir le widget FedaPay
+      window.FedaPay.open(transaction);
 
       setLoading(false);
+
     } catch (error: any) {
       console.error('Erreur FedaPay:', error);
       alert(`Erreur: ${error.message || 'Impossible de créer la transaction'}`);
@@ -470,22 +500,22 @@ export default function PremiumPage() {
       }}>
         <button
           onClick={handleSubscribe}
-          disabled={loading}
+          disabled={loading || !fedaPayReady}
           style={{
             width: '100%',
             padding: 20,
-            background: loading ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
+            background: (loading || !fedaPayReady) ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
             border: 'none',
             borderRadius: 16,
             color: '#fff',
             fontSize: 18,
             fontWeight: 800,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: loading ? 'none' : '0 12px 40px rgba(108,92,231,0.4)',
+            cursor: (loading || !fedaPayReady) ? 'not-allowed' : 'pointer',
+            boxShadow: (loading || !fedaPayReady) ? 'none' : '0 12px 40px rgba(108,92,231,0.4)',
             transition: 'all 0.3s'
           }}
         >
-          {loading ? '⏳ Chargement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
+          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
         </button>
 
         <p style={{
