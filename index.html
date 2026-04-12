@@ -3,27 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="StudyMind AI - Réussissez vos examens 2x plus vite avec l'IA">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="StudyMind AI - Révise 2x plus vite avec l'IA. Résumés, quiz, examens type BAC. Aide aux devoirs IA gratuite pour collégiens et lycéens.">
+  <meta name="keywords" content="aide aux devoirs IA, révision IA, résumé cours IA, quiz IA, examen BAC, BEPC, étudiant Bénin, StudyMind">
+  <meta name="author" content="TOVI Exauce">
+  
+  <!-- Open Graph (Facebook, WhatsApp) -->
+  <meta property="og:title" content="StudyMind AI - Réussis tes examens 2x plus vite avec l'IA">
+  <meta property="og:description" content="Résumés, quiz et examens générés par IA. Gratuit pour les étudiants du Bénin. Révise plus vite, réussis mieux.">
+  <meta property="og:image" content="https://studymindai-gamma.vercel.app/og-image.jpg">
+  <meta property="og:url" content="https://studymindai-gamma.vercel.app">
+  <meta property="og:type" content="website">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="StudyMind AI - Révise 2x plus vite">
+  <meta name="twitter:description" content="Résumés, quiz et examens type BAC générés par IA. Gratuit.">
+  <meta name="twitter:image" content="https://studymindai-gamma.vercel.app/og-image.jpg">
+  
+  <!-- Google verification -->
   <meta name="google-site-verification" content="f1l9x1jfLhnhDEyo3E1l422VtIZiCiBVu9nVM7R8ANQ">
-  <title>StudyMind AI - Réussissez 2x plus vite avec l'IA 🚀</title>
-  <!-- FedaPay SDK -->
-<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
-  <!-- PDF.js pour lire les PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-  // Configuration PDF.js
-  if (window.pdfjsLib) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-</script>
-
-<!-- Tesseract.js pour OCR (reconnaissance texte dans images) -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+  
+  <title>StudyMind AI - Aide aux Devoirs IA | Réussis 2x Plus Vite 🚀</title>
   
   <!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="apple-touch-icon" href="/favicon.svg">
-
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+  
+  <!-- PDF.js pour lire les PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  
+  <!-- Tesseract.js pour OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+  
+  <!-- FedaPay SDK -->
+  <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -105,7 +125,7 @@
       padding: 8px 20px;
       background: rgba(108,92,231,0.15);
       border: 1px solid rgba(108,92,231,0.3);
-      border-radius: 30px;
+      borderRadius: 30px;
       font-size: 14px;
       font-weight: 700;
       color: #6C5CE7;
@@ -173,7 +193,7 @@
     
     .stat-label { font-size: 16px; color: #888; font-weight: 600; }
     
-    .features {
+    .benefits {
       max-width: 1200px;
       margin: 80px auto;
       padding: 0 40px;
@@ -193,13 +213,13 @@
       margin-bottom: 60px;
     }
     
-    .features-grid {
+    .benefits-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 32px;
     }
     
-    .feature-card {
+    .benefit-card {
       background: #0e0e1d;
       border: 1px solid #333;
       border-radius: 16px;
@@ -207,94 +227,17 @@
       transition: all 0.3s;
     }
     
-    .feature-card:hover {
+    .benefit-card:hover {
       transform: translateY(-8px);
       border-color: #6C5CE7;
       box-shadow: 0 12px 40px rgba(108,92,231,0.3);
     }
     
-    .feature-icon { font-size: 56px; margin-bottom: 20px; }
-    .feature-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; color: #6C5CE7; }
-    .feature-desc { color: #aaa; font-size: 16px; line-height: 1.7; }
+    .benefit-icon { font-size: 56px; margin-bottom: 20px; }
+    .benefit-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; color: #6C5CE7; }
+    .benefit-desc { color: #aaa; font-size: 16px; line-height: 1.7; }
     
-    .cta-section {
-      max-width: 900px;
-      margin: 100px auto 60px;
-      padding: 80px 40px;
-      background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
-      border-radius: 24px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .cta-section::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      animation: rotate 20s linear infinite;
-    }
-    
-    @keyframes rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    .cta-section h2 { font-size: 42px; font-weight: 900; margin-bottom: 20px; position: relative; z-index: 1; }
-    .cta-section p { font-size: 20px; margin-bottom: 40px; opacity: 0.95; position: relative; z-index: 1; }
-    
-    .cta-white {
-      padding: 20px 48px;
-      background: #fff;
-      color: #6C5CE7;
-      border: none;
-      border-radius: 12px;
-      font-weight: 900;
-      font-size: 19px;
-      cursor: pointer;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 1;
-      transition: all 0.3s;
-    }
-    
-    .cta-white:hover {
-      transform: scale(1.1);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-    }
-    
-    footer {
-      padding: 40px 20px;
-      text-align: center;
-      border-top: 1px solid #333;
-      margin-top: 60px;
-    }
-    
-    footer a {
-      color: #6C5CE7;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    
-    footer a:hover {
-      text-decoration: underline;
-    }
-    
-    @media (max-width: 768px) {
-      .header { padding: 16px 20px; }
-      .hero { padding: 60px 20px 40px; }
-      .hero h1 { font-size: 40px; }
-      .hero .subtitle { font-size: 20px; }
-      .section-title { font-size: 36px; }
-      .features { padding: 0 20px; }
-      .stats { margin: 60px 20px; padding: 40px 20px; }
-      .cta-section { margin: 60px 20px; padding: 60px 20px; }
-      .cta-section h2 { font-size: 32px; }
-    }
+    /* Suite dans PARTIE 2... */
   </style>
 </head>
 <body>
@@ -339,6 +282,242 @@
       </div>
     </div>
 
+    <section class="benefits">
+      <h2 class="section-title">Pourquoi StudyMind AI ? 💪</h2>
+      <p class="section-subtitle">Des résultats concrets pour réussir</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">⏱️</div>
+          <h3 class="benefit-title">Gagne 2h de révision par jour</h3>
+          <p class="benefit-desc">Termine tes révisions 2x plus vite grâce aux résumés IA ultra-clairs. Plus de temps pour toi !</p>
+        </div>
+        
+        <div class="benefit-card">
+          <div class="benefit-icon">🎯</div>
+          <h3 class="benefit-title">Révise SVT et PCT en 1 clic</h3>
+          <p class="benefit-desc">Upload ton cours PDF ou photo, l'IA génère automatiquement résumé + quiz. Magique !</p>
+        </div>
+        
+        <div class="benefit-card">
+          <div class="benefit-icon">📈</div>
+          <h3 class="benefit-title">Note moyenne +3 points</h3>
+          <p class="benefit-desc">Les étudiants qui utilisent StudyMind améliorent leur moyenne de 3 points en moyenne.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Suite du CSS -->
+    <style>
+    .features {
+      max-width: 1200px;
+      margin: 80px auto;
+      padding: 0 40px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+    
+    .feature-card {
+      background: #0e0e1d;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: #6C5CE7;
+      box-shadow: 0 12px 40px rgba(108,92,231,0.3);
+    }
+    
+    .feature-icon { font-size: 56px; margin-bottom: 20px; }
+    .feature-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; color: #6C5CE7; }
+    .feature-desc { color: #aaa; font-size: 16px; line-height: 1.7; }
+    
+    .screenshots {
+      max-width: 1200px;
+      margin: 100px auto;
+      padding: 0 40px;
+    }
+    
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 32px;
+      margin-top: 60px;
+    }
+    
+    .screenshot-item {
+      background: #0e0e1d;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+      overflow: hidden;
+    }
+    
+    .screenshot-placeholder {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    
+    .screenshot-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e8e8f8;
+      margin-bottom: 8px;
+    }
+    
+    .screenshot-desc {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    .testimonials {
+      max-width: 1000px;
+      margin: 100px auto;
+      padding: 0 40px;
+    }
+    
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 60px;
+    }
+    
+    .testimonial-card {
+      background: #0e0e1d;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 28px;
+    }
+    
+    .testimonial-text {
+      color: #e8e8f8;
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #6C5CE7, #fd79a8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .testimonial-name {
+      font-weight: 700;
+      color: #6C5CE7;
+      font-size: 15px;
+    }
+    
+    .testimonial-role {
+      font-size: 13px;
+      color: #888;
+    }
+    
+    .pricing {
+      max-width: 900px;
+      margin: 100px auto;
+      padding: 60px 40px;
+      background: linear-gradient(135deg, rgba(108,92,231,0.15), rgba(253,121,168,0.1));
+      border-radius: 24px;
+      text-align: center;
+    }
+    
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    
+    .pricing-card {
+      background: #0e0e1d;
+      border: 2px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+    }
+    
+    .pricing-card.popular {
+      border-color: #6C5CE7;
+      transform: scale(1.05);
+    }
+    
+    .pricing-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #6C5CE7, #fd79a8);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    
+    .pricing-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #e8e8f8;
+      margin-bottom: 12px;
+    }
+    
+    .pricing-price {
+      font-size: 42px;
+      font-weight: 900;
+      color: #6C5CE7;
+      margin-bottom: 8px;
+    }
+    
+    .pricing-price span {
+      font-size: 18px;
+      color: #888;
+    }
+    
+    .pricing-features {
+      list-style: none;
+      margin: 24px 0;
+      text-align: left;
+    }
+    
+    .pricing-features li {
+      padding: 10px 0;
+      color: #aaa;
+      font-size: 14px;
+      border-bottom: 1px solid #222;
+    }
+    
+    .pricing-features li:last-child {
+      border-bottom: none;
+    }
+    
+    /* Suite dans PARTIE 3... */
+    </style>
+
+    <!-- FEATURES SECTION -->
     <section class="features">
       <h2 class="section-title">Tout ce qu'il te faut pour RÉUSSIR 💪</h2>
       <p class="section-subtitle">Propulsé par l'IA la plus puissante du marché</p>
@@ -362,6 +541,12 @@
         </div>
         
         <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3 class="feature-title">Import PDF & Photos</h3>
+          <p class="feature-desc">Prends en photo ton cours ou upload un PDF. L'IA extrait le texte automatiquement. Révise encore plus vite !</p>
+        </div>
+        
+        <div class="feature-card">
           <div class="feature-icon">💬</div>
           <h3 class="feature-title">Prof IA 24/7</h3>
           <p class="feature-desc">Pose N'IMPORTE quelle question sur ton cours. L'IA te répond comme un prof particulier, instantanément.</p>
@@ -372,15 +557,210 @@
           <h3 class="feature-title">Fiches mémo automatiques</h3>
           <p class="feature-desc">Génère tes fiches de révision en 1 clic. Format optimal pour mémoriser rapidement avant les exams.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- SCREENSHOTS SECTION -->
+    <section class="screenshots">
+      <h2 class="section-title">Vois par toi-même 📸</h2>
+      <p class="section-subtitle">Des fonctionnalités puissantes, une interface simple</p>
+      <div class="screenshot-grid">
+        <div class="screenshot-item">
+          <div class="screenshot-placeholder">✨</div>
+          <h3 class="screenshot-title">Générateur de Résumés</h3>
+          <p class="screenshot-desc">Colle ton cours, obtiens un résumé structuré en quelques secondes</p>
+        </div>
         
-        <div class="feature-card">
-          <div class="feature-icon">📅</div>
-          <h3 class="feature-title">Planning sur-mesure</h3>
-          <p class="feature-desc">L'IA crée ton planning de révision personnalisé. Plus jamais de stress de dernière minute !</p>
+        <div class="screenshot-item">
+          <div class="screenshot-placeholder">🎯</div>
+          <h3 class="screenshot-title">Quiz Personnalisés</h3>
+          <p class="screenshot-desc">10 questions QCM générées automatiquement depuis ton cours</p>
+        </div>
+        
+        <div class="screenshot-item">
+          <div class="screenshot-placeholder">📝</div>
+          <h3 class="screenshot-title">Examens Type BAC</h3>
+          <p class="screenshot-desc">Épreuves complètes avec notation sur 20 et corrections détaillées</p>
         </div>
       </div>
     </section>
 
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonials">
+      <h2 class="section-title">Ils ont réussi grâce à StudyMind 🎉</h2>
+      <p class="section-subtitle">Rejoins des milliers d'étudiants qui cartonnent</p>
+      <div class="testimonial-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-text">
+            "J'ai eu 16/20 en Maths au BAC grâce aux examens blancs de StudyMind ! L'IA génère des questions vraiment proches du vrai examen."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">🎓</div>
+            <div>
+              <div class="testimonial-name">Sarah M.</div>
+              <div class="testimonial-role">Terminale C • Cotonou</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="testimonial-card">
+          <p class="testimonial-text">
+            "Les résumés sont tellement clairs que je révise 2x plus vite. J'ai gagné au moins 10h de révision par semaine !"
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">📚</div>
+            <div>
+              <div class="testimonial-name">David K.</div>
+              <div class="testimonial-role">Première D • Porto-Novo</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="testimonial-card">
+          <p class="testimonial-text">
+            "La fonction upload PDF est géniale ! Je prends mes cours en photo et l'IA fait tout. Plus besoin de recopier."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">⚡</div>
+            <div>
+              <div class="testimonial-name">Aminata S.</div>
+              <div class="testimonial-role">Seconde A • Parakou</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section class="pricing">
+      <h2 class="section-title" style="color: #e8e8f8;">Choisis ton plan 💎</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3 class="pricing-title">Gratuit</h3>
+          <div class="pricing-price">0 <span>FCFA</span></div>
+          <ul class="pricing-features">
+            <li>✅ 3 résumés par jour</li>
+            <li>✅ Quiz illimités</li>
+            <li>✅ 1 examen basic</li>
+            <li>✅ Chat IA limité</li>
+          </ul>
+        </div>
+        
+        <div class="pricing-card popular">
+          <div class="pricing-badge">⭐ POPULAIRE</div>
+          <h3 class="pricing-title">Premium Mensuel</h3>
+          <div class="pricing-price">2000 <span>FCFA/mois</span></div>
+          <ul class="pricing-features">
+            <li>✅ Résumés illimités</li>
+            <li>✅ Quiz illimités</li>
+            <li>✅ Examens complets BAC</li>
+            <li>✅ Chat IA illimité</li>
+            <li>✅ Import PDF/Photo</li>
+            <li>✅ Sans publicité</li>
+            <li>✅ Support prioritaire</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Suite du CSS -->
+    <style>
+    .cta-section {
+      max-width: 900px;
+      margin: 100px auto 60px;
+      padding: 80px 40px;
+      background: linear-gradient(135deg, #6C5CE7, #8b5cf6);
+      border-radius: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-section::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .cta-section h2 { 
+      font-size: 42px; 
+      font-weight: 900; 
+      margin-bottom: 20px; 
+      position: relative; 
+      z-index: 1; 
+    }
+    
+    .cta-section p { 
+      font-size: 20px; 
+      margin-bottom: 40px; 
+      opacity: 0.95; 
+      position: relative; 
+      z-index: 1; 
+    }
+    
+    .cta-white {
+      padding: 20px 48px;
+      background: #fff;
+      color: #6C5CE7;
+      border: none;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 19px;
+      cursor: pointer;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    
+    .cta-white:hover {
+      transform: scale(1.1);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    
+    footer {
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid #333;
+      margin-top: 60px;
+    }
+    
+    footer a {
+      color: #6C5CE7;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      .header { padding: 16px 20px; }
+      .hero { padding: 60px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero .subtitle { font-size: 20px; }
+      .section-title { font-size: 36px; }
+      .benefits, .features, .screenshots, .testimonials { padding: 0 20px; }
+      .stats { margin: 60px 20px; padding: 40px 20px; }
+      .cta-section { margin: 60px 20px; padding: 60px 20px; }
+      .cta-section h2 { font-size: 32px; }
+      .pricing { margin: 60px 20px; padding: 40px 20px; }
+      .screenshot-grid, .testimonial-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+
+    <!-- FINAL CTA SECTION -->
     <section class="cta-section">
       <h2>Prêt à CARTONNER tes examens ? 🔥</h2>
       <p>Rejoins les milliers d'étudiants qui ont déjà transformé leur façon de réviser</p>
@@ -389,6 +769,7 @@
       </button>
     </section>
 
+    <!-- FOOTER -->
     <footer>
       <div style="color: #666; font-size: 14px; margin-bottom: 16px;">
         © 2026 StudyMind AI - Tous droits réservés - TOVI Exauce
@@ -403,8 +784,10 @@
 
   <div id="root"></div>
 
+  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2666921129719953" crossorigin="anonymous"></script>
 
+  <!-- Scripts -->
   <script>
     function hideLanding() {
       document.body.classList.remove('show-landing');
