@@ -118,33 +118,36 @@ export default function PremiumPage() {
           console.log('Payment completed:', response);
           
           // Sauvegarder dans Supabase
-          supabase
-            .from('transactions')
-            .insert({
-              user_id: user.id,
-              transaction_id: response.id || transactionId,
-              plan_type: selectedPlan,
-              amount: plan.price,
-              status: response.status === 'approved' ? 'approved' : 'pending',
-              fedapay_status: response.status,
-              created_at: new Date().toISOString()
-            })
-            .then(() => {
-              if (response.status === 'approved') {
-                // Mettre à jour is_premium
-                return supabase
-                  .from('users')
-                  .update({ is_premium: true })
-                  .eq('id', user.id);
-              }
-            })
-            .then(() => {
-              alert('Paiement réussi ! Vous êtes maintenant Premium 🎉');
-              window.location.reload();
-            })
-            .catch((err) => {
-              console.error('Error saving transaction:', err);
-            });
+      (async () => {
+  try {
+    // Sauvegarde transaction
+    await supabase
+      .from('transactions')
+      .insert({
+        user_id: user.id,
+        transaction_id: response.id || transactionId,
+        plan_type: selectedPlan,
+        amount: plan.price,
+        status: response.status === 'approved' ? 'approved' : 'pending',
+        fedapay_status: response.status,
+        created_at: new Date().toISOString()
+      });
+
+    // Si paiement validé
+    if (response.status === 'approved') {
+      await supabase
+        .from('users')
+        .update({ is_premium: true })
+        .eq('id', user.id);
+    }
+
+    alert('Paiement réussi ! Vous êtes maintenant Premium 🎉');
+    window.location.reload();
+
+  } catch (err) {
+    console.error('Error saving transaction:', err);
+  }
+})();
         },
         onError: function(error: any) {
           console.error('Payment error:', error);
