@@ -21,12 +21,12 @@ export default function PremiumPage() {
   useEffect(() => {
     const checkFedaPay = setInterval(() => {
       if (window.FedaPay) {
+        console.log('FedaPay loaded:', window.FedaPay);
         setFedaPayReady(true);
         clearInterval(checkFedaPay);
       }
     }, 100);
 
-    // Timeout après 10 secondes
     setTimeout(() => {
       clearInterval(checkFedaPay);
       if (!window.FedaPay) {
@@ -90,54 +90,68 @@ export default function PremiumPage() {
       
       // Configuration FedaPay
       const publicKey = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY;
-      const environment = import.meta.env.VITE_FEDAPAY_ENVIRONMENT || 'sandbox';
-
+      
       if (!publicKey) {
         alert('Erreur de configuration. Contactez le support.');
         setLoading(false);
         return;
       }
 
-      // Initialiser FedaPay avec la bonne syntaxe
+      console.log('Creating FedaPay transaction...');
+
+      // Créer un ID de transaction unique
+      const transactionId = `studymind_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // NOUVELLE MÉTHODE - Utiliser FedaPay.init directement
       window.FedaPay.init({
         public_key: publicKey,
-        environment: environment // 'sandbox' ou 'live'
-      });
-
-      // Créer la transaction
-      const transaction = {
-        amount: plan.price,
-        description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}`,
-        callback_url: `${window.location.origin}/payment-success`,
-        cancel_url: `${window.location.origin}/premium`,
-        customer: {
-          email: user.email,
-          firstname: userProfile?.first_name || 'Utilisateur',
-          lastname: 'StudyMind'
-        }
-      };
-
-      // Générer un ID unique pour la transaction
-      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // Sauvegarder la transaction dans Supabase
-      const { error: dbError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          transaction_id: transactionId,
-          plan_type: selectedPlan,
+        transaction: {
           amount: plan.price,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        });
-
-      if (dbError) {
-        console.error('Erreur DB:', dbError);
-      }
-
-      // Ouvrir le widget FedaPay
-      window.FedaPay.open(transaction);
+          description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire (7 jours)' : 'Mensuel (30 jours)'}`,
+          customer: {
+            firstname: userProfile?.first_name || 'Utilisateur',
+            lastname: 'StudyMind',
+            email: user.email
+          }
+        },
+        onComplete: function(response: any) {
+          console.log('Payment completed:', response);
+          
+          // Sauvegarder dans Supabase
+          supabase
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              transaction_id: response.id || transactionId,
+              plan_type: selectedPlan,
+              amount: plan.price,
+              status: response.status === 'approved' ? 'approved' : 'pending',
+              fedapay_status: response.status,
+              created_at: new Date().toISOString()
+            })
+            .then(() => {
+              if (response.status === 'approved') {
+                // Mettre à jour is_premium
+                return supabase
+                  .from('users')
+                  .update({ is_premium: true })
+                  .eq('id', user.id);
+              }
+            })
+            .then(() => {
+              alert('Paiement réussi ! Vous êtes maintenant Premium 🎉');
+              window.location.reload();
+            })
+            .catch((err) => {
+              console.error('Error saving transaction:', err);
+            });
+        },
+        onError: function(error: any) {
+          console.error('Payment error:', error);
+          alert('Erreur lors du paiement. Réessayez.');
+          setLoading(false);
+        }
+      });
 
       setLoading(false);
 
@@ -515,7 +529,7 @@ export default function PremiumPage() {
             transition: 'all 0.3s'
           }}
         >
-          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
+          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA/1$)' : '(2000 FCFA/3$)'}`}
         </button>
 
         <p style={{
