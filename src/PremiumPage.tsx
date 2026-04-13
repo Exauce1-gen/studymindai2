@@ -16,12 +16,22 @@ export default function PremiumPage() {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
   const [fedaPayReady, setFedaPayReady] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+
+  const addDebugLog = (message: string) => {
+    console.log('[DEBUG]', message);
+    setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   // Vérifier que FedaPay est chargé
   useEffect(() => {
+    addDebugLog('Checking for FedaPay SDK...');
+    
     const checkFedaPay = setInterval(() => {
       if (window.FedaPay) {
-        console.log('FedaPay loaded:', window.FedaPay);
+        addDebugLog('✅ FedaPay SDK loaded successfully');
+        console.log('FedaPay object:', window.FedaPay);
+        console.log('FedaPay methods:', Object.keys(window.FedaPay));
         setFedaPayReady(true);
         clearInterval(checkFedaPay);
       }
@@ -30,7 +40,7 @@ export default function PremiumPage() {
     setTimeout(() => {
       clearInterval(checkFedaPay);
       if (!window.FedaPay) {
-        console.error('FedaPay SDK failed to load');
+        addDebugLog('❌ FedaPay SDK failed to load after 10 seconds');
       }
     }, 10000);
 
@@ -57,7 +67,7 @@ export default function PremiumPage() {
       priceUSD: 3,
       duration: '30 jours',
       popular: true,
-      savings: 'Économisez 1000 FCFA/1,5$ !',
+      savings: 'Économisez 1000 FCFA !',
       features: [
         '✨ Résumés illimités',
         '🎯 Quiz illimités',
@@ -73,41 +83,52 @@ export default function PremiumPage() {
   };
 
   const handleSubscribe = async () => {
+    addDebugLog('🔵 Subscribe button clicked');
+    
     if (!user) {
+      addDebugLog('❌ No user logged in');
       alert('Vous devez être connecté pour souscrire');
       return;
     }
 
+    addDebugLog(`✅ User logged in: ${user.email}`);
+
     if (!fedaPayReady || !window.FedaPay) {
+      addDebugLog('❌ FedaPay not ready');
       alert('Chargement du système de paiement... Veuillez réessayer dans quelques secondes.');
       return;
     }
+
+    addDebugLog('✅ FedaPay is ready');
 
     setLoading(true);
 
     try {
       const plan = plans[selectedPlan];
+      addDebugLog(`Selected plan: ${selectedPlan} (${plan.price} FCFA)`);
       
       // Configuration FedaPay
       const publicKey = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY;
       
+      addDebugLog(`Public key: ${publicKey ? publicKey.substring(0, 20) + '...' : 'NOT FOUND'}`);
+      
       if (!publicKey) {
-        alert('Erreur de configuration. Contactez le support.');
+        addDebugLog('❌ VITE_FEDAPAY_PUBLIC_KEY not found in environment variables');
+        alert('Erreur de configuration FedaPay. La clé publique est manquante.');
         setLoading(false);
         return;
       }
 
-      console.log('Creating FedaPay transaction...');
+      addDebugLog('Creating FedaPay transaction...');
 
-      // Créer un ID de transaction unique
-      const transactionId = `studymind_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Vérifier toutes les méthodes disponibles
+      addDebugLog('Available FedaPay methods: ' + Object.keys(window.FedaPay).join(', '));
 
-      // NOUVELLE MÉTHODE - Utiliser FedaPay.init directement
-      window.FedaPay.init({
+      const transactionData = {
         public_key: publicKey,
         transaction: {
           amount: plan.price,
-          description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire (7 jours)' : 'Mensuel (30 jours)'}`,
+          description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}`,
           customer: {
             firstname: userProfile?.first_name || 'Utilisateur',
             lastname: 'StudyMind',
@@ -115,52 +136,66 @@ export default function PremiumPage() {
           }
         },
         onComplete: function(response: any) {
-          console.log('Payment completed:', response);
+          addDebugLog('✅ Payment completed');
+          console.log('Payment response:', response);
+          alert('Paiement réussi ! 🎉');
           
           // Sauvegarder dans Supabase
-      (async () => {
-  try {
-    // Sauvegarde transaction
-    await supabase
-      .from('transactions')
-      .insert({
-        user_id: user.id,
-        transaction_id: response.id || transactionId,
-        plan_type: selectedPlan,
-        amount: plan.price,
-        status: response.status === 'approved' ? 'approved' : 'pending',
-        fedapay_status: response.status,
-        created_at: new Date().toISOString()
-      });
-
-    // Si paiement validé
-    if (response.status === 'approved') {
-      await supabase
-        .from('users')
-        .update({ is_premium: true })
-        .eq('id', user.id);
-    }
-
-    alert('Paiement réussi ! Vous êtes maintenant Premium 🎉');
-    window.location.reload();
-
-  } catch (err) {
-    console.error('Error saving transaction:', err);
-  }
-})();
+          supabase
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              transaction_id: response.id || `txn_${Date.now()}`,
+              plan_type: selectedPlan,
+              amount: plan.price,
+              status: 'approved',
+              created_at: new Date().toISOString()
+            })
+            .then(() => {
+              return supabase
+                .from('users')
+                .update({ is_premium: true })
+                .eq('id', user.id);
+            })
+            .then(() => {
+              window.location.reload();
+            });
         },
         onError: function(error: any) {
+          addDebugLog('❌ Payment error: ' + JSON.stringify(error));
           console.error('Payment error:', error);
-          alert('Erreur lors du paiement. Réessayez.');
+          alert('Erreur lors du paiement');
           setLoading(false);
         }
-      });
+      };
+
+      addDebugLog('Transaction data prepared');
+      console.log('Transaction data:', transactionData);
+
+      // Essayer différentes méthodes
+      if (typeof window.FedaPay.init === 'function') {
+        addDebugLog('Calling FedaPay.init()...');
+        window.FedaPay.init(transactionData);
+        addDebugLog('✅ FedaPay.init() called successfully');
+      } else if (typeof window.FedaPay.open === 'function') {
+        addDebugLog('Calling FedaPay.open()...');
+        window.FedaPay.open(transactionData);
+        addDebugLog('✅ FedaPay.open() called successfully');
+      } else if (typeof window.FedaPay === 'function') {
+        addDebugLog('Calling FedaPay() as function...');
+        window.FedaPay(transactionData);
+        addDebugLog('✅ FedaPay() called successfully');
+      } else {
+        addDebugLog('❌ No suitable FedaPay method found');
+        alert('Erreur: Impossible de démarrer FedaPay. Vérifiez la console.');
+      }
 
       setLoading(false);
 
     } catch (error: any) {
-      console.error('Erreur FedaPay:', error);
-      alert(`Erreur: ${error.message || 'Impossible de créer la transaction'}`);
+      addDebugLog('❌ Exception caught: ' + error.message);
+      console.error('Error:', error);
+      alert(`Erreur: ${error.message}`);
       setLoading(false);
     }
   };
@@ -172,13 +207,9 @@ export default function PremiumPage() {
         background: '#07070f',
         padding: 20
       }}>
-        {/* Header avec bouton retour */}
         <div style={{
           maxWidth: 1200,
-          margin: '0 auto 40px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16
+          margin: '0 auto 40px'
         }}>
           <button
             onClick={() => window.location.href = '/'}
@@ -197,7 +228,6 @@ export default function PremiumPage() {
           </button>
         </div>
 
-        {/* Statut Premium */}
         <div style={{
           maxWidth: 800,
           margin: '0 auto',
@@ -227,38 +257,10 @@ export default function PremiumPage() {
           </h1>
           <p style={{
             fontSize: 18,
-            color: '#aaa',
-            marginBottom: 32
+            color: '#aaa'
           }}>
             Profitez de toutes les fonctionnalités illimitées
           </p>
-
-          <div style={{
-            background: '#0e0e1d',
-            border: '1px solid #333',
-            borderRadius: 16,
-            padding: 32,
-            textAlign: 'left'
-          }}>
-            <h3 style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: '#6C5CE7',
-              marginBottom: 20
-            }}>
-              ✨ Vos avantages Premium
-            </h3>
-            {plans.monthly.features.map((feature, i) => (
-              <div key={i} style={{
-                padding: '12px 0',
-                borderBottom: i < plans.monthly.features.length - 1 ? '1px solid #222' : 'none',
-                color: '#e8e8f8',
-                fontSize: 15
-              }}>
-                {feature}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     );
@@ -270,13 +272,42 @@ export default function PremiumPage() {
       background: '#07070f',
       padding: 20
     }}>
-      {/* Header avec bouton retour */}
+      {/* DEBUG LOG PANEL */}
+      {debugLog.length > 0 && (
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto 20px',
+          padding: 20,
+          background: '#0e0e1d',
+          border: '1px solid #6C5CE7',
+          borderRadius: 12,
+          maxHeight: 300,
+          overflowY: 'auto'
+        }}>
+          <h3 style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: '#6C5CE7',
+            marginBottom: 12
+          }}>
+            🔍 Debug Log (Envoie-moi ce log !)
+          </h3>
+          {debugLog.map((log, i) => (
+            <div key={i} style={{
+              fontSize: 12,
+              fontFamily: 'monospace',
+              color: '#aaa',
+              marginBottom: 4
+            }}>
+              {log}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{
         maxWidth: 1200,
-        margin: '0 auto 40px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16
+        margin: '0 auto 40px'
       }}>
         <button
           onClick={() => window.location.href = '/'}
@@ -295,7 +326,6 @@ export default function PremiumPage() {
         </button>
       </div>
 
-      {/* Hero Section */}
       <div style={{
         maxWidth: 1200,
         margin: '0 auto',
@@ -340,7 +370,6 @@ export default function PremiumPage() {
         </p>
       </div>
 
-      {/* Plans de prix */}
       <div style={{
         maxWidth: 1000,
         margin: '0 auto 60px',
@@ -348,7 +377,6 @@ export default function PremiumPage() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: 24
       }}>
-        {/* Plan Hebdomadaire */}
         <div
           onClick={() => setSelectedPlan('weekly')}
           style={{
@@ -357,49 +385,18 @@ export default function PremiumPage() {
             borderRadius: 20,
             padding: 32,
             cursor: 'pointer',
-            transition: 'all 0.3s',
             position: 'relative'
           }}
         >
-          <h3 style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: '#e8e8f8',
-            marginBottom: 8
-          }}>
+          <h3 style={{ fontSize: 24, fontWeight: 800, color: '#e8e8f8', marginBottom: 8 }}>
             Hebdomadaire
           </h3>
-
-          <div style={{
-            fontSize: 48,
-            fontWeight: 900,
-            color: '#6C5CE7',
-            marginBottom: 4
-          }}>
-            500 <span style={{fontSize: 24, color: '#aaa'}}>FCFA</span> <div style={{   fontSize: 14,   color: '#888',   marginTop: 4 }}>   ≈ 1$ </div>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#6C5CE7', marginBottom: 4 }}>
+            500 <span style={{fontSize: 24, color: '#aaa'}}>FCFA</span>
           </div>
-
-          <p style={{
-            fontSize: 14,
-            color: '#888',
-            marginBottom: 24
-          }}>
-            Pour {plans.weekly.duration}
+          <p style={{ fontSize: 14, color: '#888', marginBottom: 24 }}>
+            Pour 7 jours
           </p>
-
-          <div style={{marginBottom: 24}}>
-            {plans.weekly.features.map((feature, i) => (
-              <div key={i} style={{
-                padding: '10px 0',
-                color: '#e8e8f8',
-                fontSize: 14,
-                borderBottom: i < plans.weekly.features.length - 1 ? '1px solid #222' : 'none'
-              }}>
-                {feature}
-              </div>
-            ))}
-          </div>
-
           {selectedPlan === 'weekly' && (
             <div style={{
               position: 'absolute',
@@ -411,15 +408,11 @@ export default function PremiumPage() {
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16
-            }}>
-              ✓
-            </div>
+              justifyContent: 'center'
+            }}>✓</div>
           )}
         </div>
 
-        {/* Plan Mensuel (Populaire) */}
         <div
           onClick={() => setSelectedPlan('monthly')}
           style={{
@@ -428,67 +421,30 @@ export default function PremiumPage() {
             borderRadius: 20,
             padding: 32,
             cursor: 'pointer',
-            transition: 'all 0.3s',
             position: 'relative'
           }}
         >
-          {plans.monthly.popular && (
-            <div style={{
-              position: 'absolute',
-              top: -12,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '6px 16px',
-              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#fff'
-            }}>
-              ⭐ PLUS POPULAIRE
-            </div>
-          )}
-
-          <h3 style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: '#e8e8f8',
-            marginBottom: 8
-          }}>
+          <div style={{
+            position: 'absolute',
+            top: -12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '6px 16px',
+            background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#fff'
+          }}>⭐ POPULAIRE</div>
+          <h3 style={{ fontSize: 24, fontWeight: 800, color: '#e8e8f8', marginBottom: 8 }}>
             Mensuel
           </h3>
-
-          <div style={{
-            fontSize: 48,
-            fontWeight: 900,
-            color: '#6C5CE7',
-            marginBottom: 4
-          }}>
-            2000 <span style={{fontSize: 24, color: '#aaa'}}>FCFA</span> <div style={{   fontSize: 14,   color: '#888',   marginTop: 4 }}>   ≈ 3$ </div>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#6C5CE7', marginBottom: 4 }}>
+            2000 <span style={{fontSize: 24, color: '#aaa'}}>FCFA</span>
           </div>
-
-          <p style={{
-            fontSize: 14,
-            color: '#00b894',
-            fontWeight: 700,
-            marginBottom: 24
-          }}>
-            {plans.monthly.savings}
+          <p style={{ fontSize: 14, color: '#00b894', fontWeight: 700, marginBottom: 24 }}>
+            Économisez 1000 FCFA !
           </p>
-
-          <div style={{marginBottom: 24}}>
-            {plans.monthly.features.map((feature, i) => (
-              <div key={i} style={{
-                padding: '10px 0',
-                color: '#e8e8f8',
-                fontSize: 14,
-                borderBottom: i < plans.monthly.features.length - 1 ? '1px solid #222' : 'none'
-              }}>
-                {feature}
-              </div>
-            ))}
-          </div>
-
           {selectedPlan === 'monthly' && (
             <div style={{
               position: 'absolute',
@@ -500,16 +456,12 @@ export default function PremiumPage() {
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16
-            }}>
-              ✓
-            </div>
+              justifyContent: 'center'
+            }}>✓</div>
           )}
         </div>
       </div>
 
-      {/* CTA Button */}
       <div style={{
         maxWidth: 500,
         margin: '0 auto',
@@ -528,81 +480,15 @@ export default function PremiumPage() {
             fontSize: 18,
             fontWeight: 800,
             cursor: (loading || !fedaPayReady) ? 'not-allowed' : 'pointer',
-            boxShadow: (loading || !fedaPayReady) ? 'none' : '0 12px 40px rgba(108,92,231,0.4)',
-            transition: 'all 0.3s'
+            boxShadow: (loading || !fedaPayReady) ? 'none' : '0 12px 40px rgba(108,92,231,0.4)'
           }}
         >
-          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA/1$)' : '(2000 FCFA/3$)'}`}
+          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
         </button>
 
-        <p style={{
-          fontSize: 13,
-          color: '#888',
-          marginTop: 16
-        }}>
+        <p style={{ fontSize: 13, color: '#888', marginTop: 16 }}>
           Paiement sécurisé par FedaPay • Résiliable à tout moment
         </p>
-      </div>
-
-      {/* Comparaison Gratuit vs Premium */}
-      <div style={{
-        maxWidth: 800,
-        margin: '80px auto 0',
-        background: '#0e0e1d',
-        border: '1px solid #333',
-        borderRadius: 20,
-        padding: 40
-      }}>
-        <h2 style={{
-          fontSize: 28,
-          fontWeight: 800,
-          color: '#e8e8f8',
-          marginBottom: 32,
-          textAlign: 'center'
-        }}>
-          Gratuit vs Premium
-        </h2>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 16
-        }}>
-          <div style={{textAlign: 'center', color: '#aaa', fontWeight: 700, fontSize: 18}}>
-            Gratuit
-          </div>
-          <div style={{textAlign: 'center', color: '#6C5CE7', fontWeight: 700, fontSize: 18}}>
-            Premium 💎
-          </div>
-
-          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
-            3 résumés/jour
-          </div>
-          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
-            Résumés illimités
-          </div>
-
-          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
-            1 examen basic
-          </div>
-          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
-            Examens complets illimités
-          </div>
-
-          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
-            Publicités
-          </div>
-          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
-            Sans publicité
-          </div>
-
-          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
-            Support standard
-          </div>
-          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
-            Support prioritaire
-          </div>
-        </div>
       </div>
     </div>
   );
