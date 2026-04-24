@@ -16,22 +16,19 @@ export default function PremiumPage() {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
   const [fedaPayReady, setFedaPayReady] = useState(false);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
 
-  const addDebugLog = (message: string) => {
-    console.log('[DEBUG]', message);
-    setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
+  // CLÉS FEDAPAY EN DUR (POUR TEST)
+  const FEDAPAY_PUBLIC_KEY = 'pk_live_w3iTiBK0EvfSC1h7sXh2KV8O';
 
   // Vérifier que FedaPay est chargé
   useEffect(() => {
-    addDebugLog('Checking for FedaPay SDK...');
+    console.log('🔍 Checking for FedaPay SDK...');
     
     const checkFedaPay = setInterval(() => {
       if (window.FedaPay) {
-        addDebugLog('✅ FedaPay SDK loaded successfully');
+        console.log('✅ FedaPay SDK loaded');
         console.log('FedaPay object:', window.FedaPay);
-        console.log('FedaPay methods:', Object.keys(window.FedaPay));
+        console.log('Available methods:', Object.keys(window.FedaPay));
         setFedaPayReady(true);
         clearInterval(checkFedaPay);
       }
@@ -40,7 +37,8 @@ export default function PremiumPage() {
     setTimeout(() => {
       clearInterval(checkFedaPay);
       if (!window.FedaPay) {
-        addDebugLog('❌ FedaPay SDK failed to load after 10 seconds');
+        console.error('❌ FedaPay SDK failed to load');
+        alert('Erreur: FedaPay SDK non chargé. Vérifiez que le script est dans index.html');
       }
     }, 10000);
 
@@ -50,7 +48,6 @@ export default function PremiumPage() {
   const plans = {
     weekly: {
       price: 500,
-      priceUSD: 1,
       duration: '7 jours',
       features: [
         '✨ Résumés illimités',
@@ -64,7 +61,6 @@ export default function PremiumPage() {
     },
     monthly: {
       price: 2000,
-      priceUSD: 3,
       duration: '30 jours',
       popular: true,
       savings: 'Économisez 1000 FCFA !',
@@ -83,52 +79,35 @@ export default function PremiumPage() {
   };
 
   const handleSubscribe = async () => {
-    addDebugLog('🔵 Subscribe button clicked');
+    console.log('🔵 Subscribe button clicked');
     
     if (!user) {
-      addDebugLog('❌ No user logged in');
+      console.log('❌ No user');
       alert('Vous devez être connecté pour souscrire');
       return;
     }
 
-    addDebugLog(`✅ User logged in: ${user.email}`);
+    console.log('✅ User:', user.email);
 
     if (!fedaPayReady || !window.FedaPay) {
-      addDebugLog('❌ FedaPay not ready');
-      alert('Chargement du système de paiement... Veuillez réessayer dans quelques secondes.');
+      console.log('❌ FedaPay not ready');
+      alert('FedaPay n\'est pas chargé. Rechargez la page et réessayez.');
       return;
     }
 
-    addDebugLog('✅ FedaPay is ready');
+    console.log('✅ FedaPay ready');
 
     setLoading(true);
 
     try {
       const plan = plans[selectedPlan];
-      addDebugLog(`Selected plan: ${selectedPlan} (${plan.price} FCFA)`);
-      
-      // Configuration FedaPay
-      const publicKey = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY;
-      
-      addDebugLog(`Public key: ${publicKey ? publicKey.substring(0, 20) + '...' : 'NOT FOUND'}`);
-      
-      if (!publicKey) {
-        addDebugLog('❌ VITE_FEDAPAY_PUBLIC_KEY not found in environment variables');
-        alert('Erreur de configuration FedaPay. La clé publique est manquante.');
-        setLoading(false);
-        return;
-      }
-
-      addDebugLog('Creating FedaPay transaction...');
-
-      // Vérifier toutes les méthodes disponibles
-      addDebugLog('Available FedaPay methods: ' + Object.keys(window.FedaPay).join(', '));
+      console.log('📦 Plan selected:', selectedPlan, plan.price, 'FCFA');
 
       const transactionData = {
-        public_key: publicKey,
+        public_key: FEDAPAY_PUBLIC_KEY,
         transaction: {
           amount: plan.price,
-          description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}`,
+          description: `StudyMind AI Premium - ${selectedPlan === 'weekly' ? 'Hebdomadaire (7j)' : 'Mensuel (30j)'}`,
           customer: {
             firstname: userProfile?.first_name || 'Utilisateur',
             lastname: 'StudyMind',
@@ -136,11 +115,9 @@ export default function PremiumPage() {
           }
         },
         onComplete: function(response: any) {
-          addDebugLog('✅ Payment completed');
-          console.log('Payment response:', response);
-          alert('Paiement réussi ! 🎉');
+          console.log('✅ Payment completed!', response);
           
-          // Sauvegarder dans Supabase
+          // Sauvegarder transaction
           supabase
             .from('transactions')
             .insert({
@@ -149,53 +126,58 @@ export default function PremiumPage() {
               plan_type: selectedPlan,
               amount: plan.price,
               status: 'approved',
+              fedapay_status: response.status,
               created_at: new Date().toISOString()
             })
             .then(() => {
+              // Activer premium
               return supabase
                 .from('users')
                 .update({ is_premium: true })
                 .eq('id', user.id);
             })
             .then(() => {
+              alert('🎉 Paiement réussi ! Vous êtes maintenant Premium !');
               window.location.reload();
+            })
+            .catch((err) => {
+              console.error('Error saving:', err);
+              alert('Paiement réussi mais erreur de sauvegarde. Contactez le support.');
             });
         },
         onError: function(error: any) {
-          addDebugLog('❌ Payment error: ' + JSON.stringify(error));
-          console.error('Payment error:', error);
-          alert('Erreur lors du paiement');
+          console.error('❌ Payment error:', error);
+          alert('Erreur lors du paiement: ' + (error.message || 'Erreur inconnue'));
           setLoading(false);
         }
       };
 
-      addDebugLog('Transaction data prepared');
-      console.log('Transaction data:', transactionData);
+      console.log('📤 Calling FedaPay.init with data:', transactionData);
 
-      // Essayer différentes méthodes
+      // Tester toutes les méthodes possibles
       if (typeof window.FedaPay.init === 'function') {
-        addDebugLog('Calling FedaPay.init()...');
+        console.log('🚀 Using FedaPay.init()');
         window.FedaPay.init(transactionData);
-        addDebugLog('✅ FedaPay.init() called successfully');
+      } else if (typeof window.FedaPay.initWithScript === 'function') {
+        console.log('🚀 Using FedaPay.initWithScript()');
+        window.FedaPay.initWithScript(transactionData);
       } else if (typeof window.FedaPay.open === 'function') {
-        addDebugLog('Calling FedaPay.open()...');
+        console.log('🚀 Using FedaPay.open()');
         window.FedaPay.open(transactionData);
-        addDebugLog('✅ FedaPay.open() called successfully');
       } else if (typeof window.FedaPay === 'function') {
-        addDebugLog('Calling FedaPay() as function...');
+        console.log('🚀 Using FedaPay() as function');
         window.FedaPay(transactionData);
-        addDebugLog('✅ FedaPay() called successfully');
       } else {
-        addDebugLog('❌ No suitable FedaPay method found');
-        alert('Erreur: Impossible de démarrer FedaPay. Vérifiez la console.');
+        console.error('❌ No FedaPay method found!');
+        alert('Aucune méthode FedaPay disponible. Contactez le support.');
       }
 
+      console.log('✅ FedaPay method called');
       setLoading(false);
 
     } catch (error: any) {
-      addDebugLog('❌ Exception caught: ' + error.message);
-      console.error('Error:', error);
-      alert(`Erreur: ${error.message}`);
+      console.error('❌ Exception:', error);
+      alert('Erreur: ' + error.message);
       setLoading(false);
     }
   };
@@ -257,10 +239,38 @@ export default function PremiumPage() {
           </h1>
           <p style={{
             fontSize: 18,
-            color: '#aaa'
+            color: '#aaa',
+            marginBottom: 32
           }}>
             Profitez de toutes les fonctionnalités illimitées
           </p>
+
+          <div style={{
+            background: '#0e0e1d',
+            border: '1px solid #333',
+            borderRadius: 16,
+            padding: 32,
+            textAlign: 'left'
+          }}>
+            <h3 style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: '#6C5CE7',
+              marginBottom: 20
+            }}>
+              ✨ Vos avantages Premium
+            </h3>
+            {plans.monthly.features.map((feature, i) => (
+              <div key={i} style={{
+                padding: '12px 0',
+                borderBottom: i < plans.monthly.features.length - 1 ? '1px solid #222' : 'none',
+                color: '#e8e8f8',
+                fontSize: 15
+              }}>
+                {feature}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -272,39 +282,6 @@ export default function PremiumPage() {
       background: '#07070f',
       padding: 20
     }}>
-      {/* DEBUG LOG PANEL */}
-      {debugLog.length > 0 && (
-        <div style={{
-          maxWidth: 1200,
-          margin: '0 auto 20px',
-          padding: 20,
-          background: '#0e0e1d',
-          border: '1px solid #6C5CE7',
-          borderRadius: 12,
-          maxHeight: 300,
-          overflowY: 'auto'
-        }}>
-          <h3 style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: '#6C5CE7',
-            marginBottom: 12
-          }}>
-            🔍 Debug Log (Envoie-moi ce log !)
-          </h3>
-          {debugLog.map((log, i) => (
-            <div key={i} style={{
-              fontSize: 12,
-              fontFamily: 'monospace',
-              color: '#aaa',
-              marginBottom: 4
-            }}>
-              {log}
-            </div>
-          ))}
-        </div>
-      )}
-
       <div style={{
         maxWidth: 1200,
         margin: '0 auto 40px'
@@ -483,12 +460,87 @@ export default function PremiumPage() {
             boxShadow: (loading || !fedaPayReady) ? 'none' : '0 12px 40px rgba(108,92,231,0.4)'
           }}
         >
-          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement paiement...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
+          {loading ? '⏳ Chargement...' : !fedaPayReady ? '⏳ Chargement FedaPay...' : `🚀 Souscrire ${selectedPlan === 'weekly' ? '(500 FCFA)' : '(2000 FCFA)'}`}
         </button>
 
         <p style={{ fontSize: 13, color: '#888', marginTop: 16 }}>
           Paiement sécurisé par FedaPay • Résiliable à tout moment
         </p>
+
+        <div style={{
+          marginTop: 24,
+          padding: 16,
+          background: '#0e0e1d',
+          border: '1px solid #6C5CE7',
+          borderRadius: 12,
+          fontSize: 13,
+          color: '#aaa',
+          textAlign: 'left'
+        }}>
+          <strong style={{ color: '#6C5CE7' }}>🔍 Mode DEBUG :</strong><br/>
+          Ouvrez la console (F12) pour voir les logs détaillés.<br/>
+          Clé utilisée : {FEDAPAY_PUBLIC_KEY.substring(0, 20)}...
+        </div>
+      </div>
+
+      <div style={{
+        maxWidth: 800,
+        margin: '80px auto 0',
+        background: '#0e0e1d',
+        border: '1px solid #333',
+        borderRadius: 20,
+        padding: 40
+      }}>
+        <h2 style={{
+          fontSize: 28,
+          fontWeight: 800,
+          color: '#e8e8f8',
+          marginBottom: 32,
+          textAlign: 'center'
+        }}>
+          Gratuit vs Premium
+        </h2>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 16
+        }}>
+          <div style={{textAlign: 'center', color: '#aaa', fontWeight: 700, fontSize: 18}}>
+            Gratuit
+          </div>
+          <div style={{textAlign: 'center', color: '#6C5CE7', fontWeight: 700, fontSize: 18}}>
+            Premium 💎
+          </div>
+
+          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
+            3 résumés/jour
+          </div>
+          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
+            Résumés illimités
+          </div>
+
+          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
+            Quiz limités
+          </div>
+          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
+            Quiz illimités
+          </div>
+
+          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
+            1 examen basic
+          </div>
+          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
+            Examens complets
+          </div>
+
+          <div style={{padding: 16, background: '#1a1a2e', borderRadius: 12, textAlign: 'center'}}>
+            Publicités
+          </div>
+          <div style={{padding: 16, background: 'rgba(108,92,231,0.1)', borderRadius: 12, textAlign: 'center', color: '#6C5CE7', fontWeight: 700}}>
+            Sans publicité
+          </div>
+        </div>
       </div>
     </div>
   );
