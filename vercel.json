@@ -17,4 +17,9 @@
       "destination": "/index.html"
     }
   ]
+{
+  "crons": [{
+    "path": "/api/check-expired-premium",
+    "schedule": "0 0 * * *"
+  }]
 }
