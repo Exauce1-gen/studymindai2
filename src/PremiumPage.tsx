@@ -2,10 +2,40 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { usePremium } from './usePremium';
 
+// Taux de conversion approximatifs depuis le FCFA (XOF).
+// Le FCFA (XOF) est arrimé à taux fixe à l'euro : 1 EUR = 655.957 FCFA.
+// Le taux USD fluctue ; à ajuster périodiquement si besoin.
+const CURRENCY_RATES: Record<'FCFA' | 'USD' | 'EUR', number> = {
+  FCFA: 1,
+  EUR: 1 / 655.957,
+  USD: 1 / 610,
+};
+
+const CURRENCY_SYMBOLS: Record<'FCFA' | 'USD' | 'EUR', string> = {
+  FCFA: 'FCFA',
+  EUR: '€',
+  USD: '$',
+};
+
+// Formate un montant exprimé en FCFA dans la devise sélectionnée.
+// Le paiement réel est TOUJOURS effectué en FCFA via FedaPay ;
+// les autres devises ne sont qu'un affichage indicatif ("≈").
+function formatPrice(amountFCFA: number, currency: 'FCFA' | 'USD' | 'EUR'): string {
+  if (currency === 'FCFA') {
+    return `${amountFCFA.toLocaleString('fr-FR')} FCFA`;
+  }
+  const converted = amountFCFA * CURRENCY_RATES[currency];
+  const symbol = CURRENCY_SYMBOLS[currency];
+  return currency === 'USD'
+    ? `≈ ${symbol}${converted.toFixed(2)}`
+    : `≈ ${converted.toFixed(2)} ${symbol}`;
+}
+
 export default function PremiumPage() {
   const { userProfile } = useAuth();
   const { isPremium } = usePremium();
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
+  const [currency, setCurrency] = useState<'FCFA' | 'USD' | 'EUR'>('FCFA');
 
   // LIENS DE PAIEMENT FEDAPAY
   const PAYMENT_LINKS = {
@@ -332,6 +362,44 @@ export default function PremiumPage() {
           Débloquez toutes les fonctionnalités et révisez sans limites.<br/>
           Résumés, quiz et examens illimités pour réussir vos examens !
         </p>
+
+        {/* Sélecteur de devise */}
+        <div style={{
+          display: 'inline-flex',
+          gap: 8,
+          padding: 6,
+          background: '#0e0e1d',
+          border: '1px solid #333',
+          borderRadius: 14,
+          marginBottom: 8
+        }}>
+          {(['FCFA', 'USD', 'EUR'] as const).map((cur) => (
+            <button
+              key={cur}
+              onClick={() => setCurrency(cur)}
+              style={{
+                padding: '10px 22px',
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: 14,
+                letterSpacing: '0.5px',
+                background: currency === cur ? 'linear-gradient(135deg, #6C5CE7, #8b5cf6)' : 'transparent',
+                color: currency === cur ? '#fff' : '#888',
+                transition: 'all 0.2s'
+              }}
+            >
+              {cur}
+            </button>
+          ))}
+        </div>
+
+        {currency !== 'FCFA' && (
+          <p style={{ fontSize: 13, color: '#888', marginTop: 12 }}>
+            💡 Les prix en {currency} sont indicatifs. Le paiement est toujours effectué en FCFA via FedaPay.
+          </p>
+        )}
       </div>
 
       {/* Plans de prix */}
@@ -373,7 +441,11 @@ export default function PremiumPage() {
             marginBottom: 8,
             lineHeight: 1
           }}>
-            500 <span style={{fontSize: 26, color: '#aaa'}}>FCFA</span>
+            {currency === 'FCFA' ? (
+              <>500 <span style={{fontSize: 26, color: '#aaa'}}>FCFA</span></>
+            ) : (
+              formatPrice(plans.weekly.price, currency)
+            )}
           </div>
 
           <div style={{
@@ -381,7 +453,9 @@ export default function PremiumPage() {
             color: '#888',
             marginBottom: 28
           }}>
-            $0.80 USD • Pour {plans.weekly.duration}
+            {currency === 'FCFA'
+              ? `${formatPrice(plans.weekly.price, 'USD')} • Pour ${plans.weekly.duration}`
+              : `Pour ${plans.weekly.duration}`}
           </div>
 
           <div style={{
@@ -471,7 +545,11 @@ export default function PremiumPage() {
             marginBottom: 8,
             lineHeight: 1
           }}>
-            2000 <span style={{fontSize: 26, color: '#aaa'}}>FCFA</span>
+            {currency === 'FCFA' ? (
+              <>2000 <span style={{fontSize: 26, color: '#aaa'}}>FCFA</span></>
+            ) : (
+              formatPrice(plans.monthly.price, currency)
+            )}
           </div>
 
           <div style={{
@@ -479,7 +557,9 @@ export default function PremiumPage() {
             color: '#888',
             marginBottom: 8
           }}>
-            $3.20 USD • Pour {plans.monthly.duration}
+            {currency === 'FCFA'
+              ? `${formatPrice(plans.monthly.price, 'USD')} • Pour ${plans.monthly.duration}`
+              : `Pour ${plans.monthly.duration}`}
           </div>
 
           <div style={{
@@ -562,7 +642,7 @@ export default function PremiumPage() {
             e.currentTarget.style.boxShadow = '0 16px 48px rgba(108,92,231,0.5)';
           }}
         >
-          🚀 Souscrire maintenant - {selectedPlan === 'weekly' ? '500 FCFA' : '2000 FCFA'}
+          🚀 Souscrire maintenant - {formatPrice(plans[selectedPlan].price, currency)}
         </button>
 
         <p style={{
