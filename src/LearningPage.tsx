@@ -309,6 +309,7 @@ function QuizScreen() {
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showResults, setShowResults] = useState(false);
 
+  const { canUse, usageCount, maxUsage, resetTime } = useUsageLimit('quiz');
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -318,6 +319,12 @@ function QuizScreen() {
   const generateQuiz = async () => {
     if (!courseContent.trim()) {
       alert('Veuillez coller votre cours ou importer un fichier !');
+      return;
+    }
+
+    // Vérifier limite gratuite
+    if (!canUse && !isPremium) {
+      alert(`Limite gratuite atteinte (${maxUsage}/jour). Réinitialisation à ${resetTime}.\n\nPassez à Premium pour des quiz illimités !`);
       return;
     }
 
@@ -360,6 +367,11 @@ function QuizScreen() {
       if (jsonMatch) {
         const quizData = JSON.parse(jsonMatch[0]);
         setQuiz(quizData);
+
+        // Incrémenter l'utilisation si gratuit
+        if (!isPremium && user) {
+          await incrementFeatureUsage(user.id, 'quiz');
+        }
       } else {
         throw new Error('Format invalide');
       }
@@ -401,6 +413,46 @@ function QuizScreen() {
       <p style={{ color: '#888', marginBottom: 24, fontSize: 15 }}>
         Créez un quiz personnalisé pour tester vos connaissances
       </p>
+
+      {/* Usage counter pour gratuit */}
+      {!isPremium && (
+        <div style={{
+          marginBottom: 20,
+          padding: 16,
+          background: canUse ? 'rgba(0,184,148,0.1)' : 'rgba(253,121,168,0.1)',
+          border: `1px solid ${canUse ? '#00b894' : '#fd79a8'}`,
+          borderRadius: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ fontSize: 14, color: canUse ? '#00b894' : '#fd79a8', fontWeight: 700 }}>
+              {canUse ? `${usageCount}/${maxUsage} quiz utilisés aujourd'hui` : '⚠️ Limite gratuite atteinte'}
+            </div>
+            {!canUse && (
+              <div style={{ fontSize: 13, color: '#aaa', marginTop: 4 }}>
+                Réinitialisation à {resetTime}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => window.location.href = '/premium'}
+            style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+              border: 'none',
+              borderRadius: 8,
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            💎 Premium Illimité
+          </button>
+        </div>
+      )}
 
       {!quiz ? (
         <>
@@ -577,11 +629,49 @@ function QuizScreen() {
 // ════════════════════════════════════════════════════════════════════
 
 function ExamScreen() {
+  const { isPremium } = usePremium();
   const [selectedSubject, setSelectedSubject] = useState('');
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showResults, setShowResults] = useState(false);
+
+  // Fonctionnalité exclusive Premium : blocage total pour les utilisateurs gratuits
+  if (!isPremium) {
+    return (
+      <div style={{
+        background: '#0e0e1d',
+        border: '1px solid #333',
+        borderRadius: 16,
+        padding: 48,
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: 56, marginBottom: 20 }}>🔒</div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: '#e8e8f8', marginBottom: 12 }}>
+          Examens type BAC/BEPC
+        </h2>
+        <p style={{ color: '#888', marginBottom: 28, fontSize: 15, maxWidth: 480, margin: '0 auto 28px' }}>
+          Les examens complets sont une fonctionnalité exclusive à l'abonnement Premium.
+          Passez à Premium pour générer des examens illimités dans toutes les matières.
+        </p>
+        <button
+          onClick={() => window.location.href = '/premium'}
+          style={{
+            padding: '14px 32px',
+            background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+            border: 'none',
+            borderRadius: 10,
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+        >
+          💎 Passer à Premium
+        </button>
+      </div>
+    );
+  }
 
   const subjects = [
     { id: 'maths', name: '📐 Mathématiques', emoji: '📐' },
@@ -877,10 +967,14 @@ function ExamScreen() {
 // ════════════════════════════════════════════════════════════════════
 
 function ChatScreen() {
+  const { user } = useAuth();
   const [courseContent, setCourseContent] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const { canUse, usageCount, maxUsage, resetTime } = useUsageLimit('chat');
+  const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
     setCourseContent(extractedText);
@@ -888,6 +982,12 @@ function ChatScreen() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+
+    // Vérifier limite gratuite (chaque message envoyé compte)
+    if (!canUse && !isPremium) {
+      alert(`Limite gratuite atteinte (${maxUsage} messages/jour). Réinitialisation à ${resetTime}.\n\nPassez à Premium pour un chat illimité !`);
+      return;
+    }
 
     const userMessage = { role: 'user' as const, content: input };
     setMessages([...messages, userMessage]);
@@ -922,6 +1022,12 @@ function ChatScreen() {
       const aiResponse = data.choices[0]?.message?.content || 'Erreur de réponse';
       
       setMessages([...messages, userMessage, { role: 'assistant', content: aiResponse }]);
+
+      // Incrémenter l'utilisation si gratuit (1 message = 1 usage)
+      if (!isPremium && user) {
+        await incrementFeatureUsage(user.id, 'chat');
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Erreur:', error);
@@ -942,6 +1048,46 @@ function ChatScreen() {
       <p style={{ color: '#888', marginBottom: 24, fontSize: 15 }}>
         Posez vos questions, l'IA vous aide à comprendre
       </p>
+
+      {/* Usage counter pour gratuit */}
+      {!isPremium && (
+        <div style={{
+          marginBottom: 20,
+          padding: 16,
+          background: canUse ? 'rgba(0,184,148,0.1)' : 'rgba(253,121,168,0.1)',
+          border: `1px solid ${canUse ? '#00b894' : '#fd79a8'}`,
+          borderRadius: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ fontSize: 14, color: canUse ? '#00b894' : '#fd79a8', fontWeight: 700 }}>
+              {canUse ? `${usageCount}/${maxUsage} messages envoyés aujourd'hui` : '⚠️ Limite gratuite atteinte'}
+            </div>
+            {!canUse && (
+              <div style={{ fontSize: 13, color: '#aaa', marginTop: 4 }}>
+                Réinitialisation à {resetTime}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => window.location.href = '/premium'}
+            style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+              border: 'none',
+              borderRadius: 8,
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            💎 Premium Illimité
+          </button>
+        </div>
+      )}
 
       {messages.length === 0 && <FileUpload onTextExtracted={handleFileUpload} />}
 
