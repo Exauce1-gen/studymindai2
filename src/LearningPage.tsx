@@ -139,7 +139,7 @@ function SummaryScreen() {
           'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           messages: [
             {
               role: 'system',
@@ -336,7 +336,7 @@ function QuizScreen() {
           'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           messages: [
             {
               role: 'system',
@@ -615,7 +615,7 @@ function ExamScreen() {
           'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           messages: [
             {
               role: 'system',
@@ -904,7 +904,7 @@ function ChatScreen() {
           'Authorization': `Bearer ${groqApiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           messages: [
             {
               role: 'system',
