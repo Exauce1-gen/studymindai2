@@ -10,12 +10,12 @@ interface UsageLimit {
   loading: boolean;
 }
 
-export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam'): UsageLimit {
+export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat'): UsageLimit {
   const { user, userProfile } = useAuth();
   const [usageCount, setUsageCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const MAX_FREE_USAGE = 3; // 3 résumés gratuits par jour
+  const MAX_FREE_USAGE = 3; // 3 utilisations gratuites par jour (par fonctionnalité)
   const isPremium = userProfile?.is_premium || false;
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam'): UsageLi
 }
 
 // Export aussi la fonction pour incrémenter depuis les composants
-export async function incrementFeatureUsage(userId: string, featureType: 'summary' | 'quiz' | 'exam') {
+export async function incrementFeatureUsage(userId: string, featureType: 'summary' | 'quiz' | 'exam' | 'chat') {
   try {
     const today = new Date().toISOString().split('T')[0];
 
