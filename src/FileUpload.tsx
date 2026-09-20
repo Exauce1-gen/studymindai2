@@ -48,25 +48,32 @@ export default function FileUpload({
   };
 
   const extractTextFromImage = async (file: File): Promise<string> => {
+    let worker: any = null;
     try {
-      // Utiliser Tesseract.js pour OCR
+      // Utiliser Tesseract.js (API worker moderne, v5+)
       const Tesseract = (window as any).Tesseract;
-      
+
       if (!Tesseract) {
         throw new Error('Tesseract.js non chargé');
       }
 
-      const result = await Tesseract.recognize(file, 'fra', {
+      worker = await Tesseract.createWorker('fra', 1, {
         logger: (m: any) => {
           if (m.status === 'recognizing text') {
             console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
         }
       });
-      
-      return result.data.text.trim();
+
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
+
+      return data.text.trim();
     } catch (error) {
       console.error('Erreur OCR:', error);
+      if (worker) {
+        try { await worker.terminate(); } catch { /* déjà terminé */ }
+      }
       throw new Error('Impossible de lire le texte de l\'image');
     }
   };
