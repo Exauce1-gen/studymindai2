@@ -14,6 +14,7 @@ export default function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [fileName, setFileName] = useState('');
+  const [extractedPreview, setExtractedPreview] = useState('');
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
@@ -76,6 +77,7 @@ export default function FileUpload({
 
     setError('');
     setFileName(file.name);
+    setExtractedPreview('');
 
     // Vérifier la taille
     const fileSizeMB = file.size / (1024 * 1024);
@@ -98,10 +100,18 @@ export default function FileUpload({
         throw new Error('Type de fichier non supporté');
       }
 
-      if (!extractedText || extractedText.length < 10) {
-        throw new Error('Aucun texte détecté dans le fichier');
+      console.log(`[FileUpload] Texte extrait (${extractedText.length} caractères):`, extractedText.slice(0, 300));
+
+      // Seuil relevé : un texte trop court est probablement du bruit (OCR raté, PDF vide, etc.)
+      if (!extractedText || extractedText.trim().length < 40) {
+        throw new Error(
+          extractedText.trim().length > 0
+            ? `Texte extrait trop court (${extractedText.trim().length} caractères) — probablement illisible. Essayez une photo plus nette ou un autre fichier.`
+            : 'Aucun texte détecté dans le fichier.'
+        );
       }
 
+      setExtractedPreview(extractedText.slice(0, 200));
       onTextExtracted(extractedText);
       setUploading(false);
     } catch (err: any) {
@@ -165,6 +175,25 @@ export default function FileUpload({
           fontWeight: 600
         }}>
           ✅ {fileName}
+        </div>
+      )}
+
+      {extractedPreview && !error && (
+        <div style={{
+          marginTop: 10,
+          padding: 12,
+          background: '#0e0e1d',
+          border: '1px solid #333',
+          borderRadius: 8,
+          textAlign: 'left',
+          fontSize: 12,
+          color: '#aaa',
+          maxHeight: 100,
+          overflow: 'auto'
+        }}>
+          <strong style={{ color: '#00b894' }}>Aperçu du texte capturé :</strong>
+          <br />
+          {extractedPreview}...
         </div>
       )}
 
