@@ -236,49 +236,86 @@ Règles impératives :
         </div>
       )}
 
-      {/* FileUpload Component */}
-      <FileUpload onTextExtracted={handleFileUpload} />
-
-      {/* Textarea */}
-      <textarea
-        value={courseContent}
-        onChange={(e) => setCourseContent(e.target.value)}
-        placeholder="Collez votre cours ici... ou importez un PDF/photo ci-dessus"
-        style={{
-          width: '100%',
-          minHeight: 200,
-          padding: 16,
+      {!isPremium && !canUse ? (
+        /* Zone de saisie verrouillée : limite gratuite atteinte */
+        <div style={{
+          padding: 40,
           background: '#1a1a2e',
-          border: '1px solid #333',
+          border: '2px dashed #fd79a8',
           borderRadius: 12,
-          color: '#fff',
-          fontSize: 15,
-          fontFamily: 'inherit',
-          resize: 'vertical',
-          outline: 'none',
+          textAlign: 'center',
           marginBottom: 20
-        }}
-      />
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#fd79a8', marginBottom: 8 }}>
+            Limite gratuite atteinte ({maxUsage}/{maxUsage} résumés aujourd'hui)
+          </div>
+          <div style={{ fontSize: 14, color: '#aaa', marginBottom: 20 }}>
+            Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
+          </div>
+          <button
+            onClick={() => window.location.href = '/premium'}
+            style={{
+              padding: '12px 28px',
+              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+              border: 'none',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            💎 Passer à Premium
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* FileUpload Component */}
+          <FileUpload onTextExtracted={handleFileUpload} />
 
-      {/* Generate Button */}
-      <button
-        onClick={generateSummary}
-        disabled={loading || !courseContent.trim()}
-        style={{
-          width: '100%',
-          padding: 16,
-          background: (loading || !courseContent.trim()) ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
-          border: 'none',
-          borderRadius: 12,
-          color: '#fff',
-          fontSize: 16,
-          fontWeight: 700,
-          cursor: (loading || !courseContent.trim()) ? 'not-allowed' : 'pointer',
-          marginBottom: 20
-        }}
-      >
-        {loading ? '⏳ Génération en cours...' : '✨ Générer le résumé'}
-      </button>
+          {/* Textarea */}
+          <textarea
+            value={courseContent}
+            onChange={(e) => setCourseContent(e.target.value)}
+            placeholder="Collez votre cours ici... ou importez un PDF/photo ci-dessus"
+            style={{
+              width: '100%',
+              minHeight: 200,
+              padding: 16,
+              background: '#1a1a2e',
+              border: '1px solid #333',
+              borderRadius: 12,
+              color: '#fff',
+              fontSize: 15,
+              fontFamily: 'inherit',
+              resize: 'vertical',
+              outline: 'none',
+              marginBottom: 20
+            }}
+          />
+
+          {/* Generate Button */}
+          <button
+            onClick={generateSummary}
+            disabled={loading || !courseContent.trim()}
+            style={{
+              width: '100%',
+              padding: 16,
+              background: (loading || !courseContent.trim()) ? '#444' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
+              border: 'none',
+              borderRadius: 12,
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: (loading || !courseContent.trim()) ? 'not-allowed' : 'pointer',
+              marginBottom: 20
+            }}
+          >
+            {loading ? '⏳ Génération en cours...' : '✨ Générer le résumé'}
+          </button>
+        </>
+      )}
 
       {/* Summary Result */}
       {summary && (
@@ -463,6 +500,39 @@ function QuizScreen() {
       )}
 
       {!quiz ? (
+        !isPremium && !canUse ? (
+          /* Zone de saisie verrouillée : limite gratuite atteinte */
+          <div style={{
+            padding: 40,
+            background: '#1a1a2e',
+            border: '2px dashed #fd79a8',
+            borderRadius: 12,
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#fd79a8', marginBottom: 8 }}>
+              Limite gratuite atteinte ({maxUsage}/{maxUsage} quiz aujourd'hui)
+            </div>
+            <div style={{ fontSize: 14, color: '#aaa', marginBottom: 20 }}>
+              Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
+            </div>
+            <button
+              onClick={() => window.location.href = '/premium'}
+              style={{
+                padding: '12px 28px',
+                background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#fff',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              💎 Passer à Premium
+            </button>
+          </div>
+        ) : (
         <>
           {/* FileUpload Component */}
           <FileUpload onTextExtracted={handleFileUpload} />
@@ -507,6 +577,7 @@ function QuizScreen() {
             {loading ? '⏳ Génération en cours...' : '🎯 Générer le quiz'}
           </button>
         </>
+        )
       ) : (
         <>
           {/* Quiz Questions */}
@@ -1144,6 +1215,39 @@ Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voic
         )}
       </div>
 
+      {!isPremium && !canUse ? (
+        /* Zone de saisie verrouillée : limite gratuite atteinte */
+        <div style={{
+          padding: 32,
+          background: '#1a1a2e',
+          border: '2px dashed #fd79a8',
+          borderRadius: 12,
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#fd79a8', marginBottom: 6 }}>
+            Limite gratuite atteinte ({maxUsage}/{maxUsage} messages aujourd'hui)
+          </div>
+          <div style={{ fontSize: 14, color: '#aaa', marginBottom: 18 }}>
+            Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
+          </div>
+          <button
+            onClick={() => window.location.href = '/premium'}
+            style={{
+              padding: '12px 28px',
+              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
+              border: 'none',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            💎 Passer à Premium
+          </button>
+        </div>
+      ) : (
       <div style={{ display: 'flex', gap: 12 }}>
         <input
           type="text"
@@ -1179,6 +1283,7 @@ Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voic
           ➤
         </button>
       </div>
+      )}
     </div>
   );
 }
