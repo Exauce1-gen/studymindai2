@@ -144,15 +144,23 @@ function SummaryScreen() {
           messages: [
             {
               role: 'system',
-              content: 'Tu es un assistant pédagogique expert. Crée des résumés clairs, structurés et faciles à mémoriser pour les étudiants.'
+              content: `Tu es un assistant pédagogique expert pour des élèves de BAC/BEPC.
+
+Règles impératives :
+1. CONCISION : un résumé doit rester un résumé. Vise 250 à 400 mots maximum (un peu plus seulement si le cours est exceptionnellement dense). Va à l'essentiel, ne remplis pas inutilement.
+2. ADAPTATION À LA MATIÈRE : identifie d'abord la matière du cours.
+   - Mathématiques, Physique-Chimie, SVT : utilise les formules et notations précises quand elles sont pertinentes.
+   - Français, Histoire-Géographie, Philosophie, Anglais, et autres matières littéraires : N'utilise PAS de formules. Explique avec du texte clair, des définitions précises et des exemples concrets.
+3. STRUCTURE : utilise des titres courts (## Titre) et des listes à puces (- point) pour les idées clés, sans surcharger.
+4. Ne répète jamais la même idée deux fois.`
             },
             {
               role: 'user',
-              content: `Résume ce cours de manière claire et structurée. Inclus les concepts clés, formules importantes et exemples.\n\nCours:\n${courseContent}`
+              content: `Fais un résumé concis et bien structuré de ce cours, adapté à sa matière (formules si scientifique, explications textuelles claires sinon).\n\nCours:\n${courseContent}`
             }
           ],
           temperature: 0.7,
-          max_tokens: 2000
+          max_tokens: 900
         })
       });
 
@@ -1008,7 +1016,13 @@ function ChatScreen() {
           messages: [
             {
               role: 'system',
-              content: `Tu es un professeur particulier bienveillant. ${courseContent ? `Voici le cours de référence:\n${courseContent}` : 'Aide l\'étudiant avec ses questions.'}`
+              content: `Tu es un professeur particulier bienveillant pour un(e) élève de BAC/BEPC.
+
+Adapte ta réponse à la matière abordée :
+- Mathématiques, Physique-Chimie, SVT : utilise les formules et notations précises quand elles sont pertinentes.
+- Français, Histoire-Géographie, Philosophie, Anglais, et autres matières littéraires : n'utilise PAS de formules. Explique avec du texte clair, des exemples concrets et des définitions précises.
+
+Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voici le cours de référence:\n${courseContent}` : 'Aide l\'étudiant avec ses questions.'}`
             },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: input }
