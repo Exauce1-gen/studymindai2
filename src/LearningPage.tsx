@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import FileUpload from './FileUpload';
 import { useUsageLimit, incrementFeatureUsage } from './useUsageLimit';
 import { usePremium } from './usePremium';
+import { renderMarkdown } from './markdownUtils';
 
 export default function LearningPage() {
   const { user, userProfile } = useAuth();
@@ -286,10 +287,9 @@ function SummaryScreen() {
           <div style={{
             color: '#e8e8f8',
             fontSize: 15,
-            lineHeight: 1.8,
-            whiteSpace: 'pre-wrap'
+            lineHeight: 1.8
           }}>
-            {summary}
+            {renderMarkdown(summary)}
           </div>
         </div>
       )}
@@ -1114,12 +1114,12 @@ function ChatScreen() {
               borderRadius: 12,
               color: '#e8e8f8',
               fontSize: 15,
-              whiteSpace: 'pre-wrap'
+              whiteSpace: msg.role === 'user' ? 'pre-wrap' : 'normal'
             }}>
               <strong style={{ color: msg.role === 'user' ? '#6C5CE7' : '#00b894', marginBottom: 8, display: 'block' }}>
                 {msg.role === 'user' ? '👤 Vous' : '🤖 IA'}
               </strong>
-              {msg.content}
+              {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
             </div>
           ))
         )}
