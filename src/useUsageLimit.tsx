@@ -8,6 +8,7 @@ interface UsageLimit {
   maxUsage: number;
   resetTime: string;
   loading: boolean;
+  incrementUsage: () => Promise<void>;
 }
 
 export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat'): UsageLimit {
@@ -107,7 +108,8 @@ export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat')
     usageCount: isPremium ? 0 : usageCount,
     maxUsage: MAX_FREE_USAGE,
     resetTime: getResetTime(),
-    loading
+    loading,
+    incrementUsage
   };
 }
 
