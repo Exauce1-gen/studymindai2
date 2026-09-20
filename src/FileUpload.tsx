@@ -6,6 +6,21 @@ interface FileUploadProps {
   maxSizeMB?: number;
 }
 
+// Détecte si le texte extrait est en réalité corrompu (données binaires mal
+// interprétées, échec silencieux d'OCR/parsing) plutôt qu'un vrai texte lisible.
+function isTextGarbage(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return true;
+
+  // Caractères "normaux" attendus dans un texte français lisible
+  const goodCharsRegex = /[a-zA-ZÀ-ÖØ-öø-ÿ0-9\s.,;:!?'"()\-%€]/g;
+  const goodCount = (trimmed.match(goodCharsRegex) || []).length;
+  const ratio = goodCount / trimmed.length;
+
+  // Si moins de 80% des caractères sont "normaux", c'est probablement corrompu
+  return ratio < 0.8;
+}
+
 export default function FileUpload({ 
   onTextExtracted, 
   acceptedTypes = '.pdf,.jpg,.jpeg,.png',
@@ -65,14 +80,25 @@ export default function FileUpload({
         }
       });
 
-      const { data } = await worker.recognize(file);
+      // Timeout de sécurité : sur connexion très lente, le téléchargement du
+      // moteur OCR / dictionnaire peut se corrompre silencieusement plutôt
+      // que d'échouer proprement. On préfère un échec net après 60s.
+      const recognizePromise = worker.recognize(file);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT_OCR')), 60000)
+      );
+
+      const { data } = (await Promise.race([recognizePromise, timeoutPromise])) as any;
       await worker.terminate();
 
       return data.text.trim();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur OCR:', error);
       if (worker) {
         try { await worker.terminate(); } catch { /* déjà terminé */ }
+      }
+      if (error?.message === 'TIMEOUT_OCR') {
+        throw new Error('La reconnaissance de texte a pris trop de temps (connexion internet lente). Réessayez avec une meilleure connexion.');
       }
       throw new Error('Impossible de lire le texte de l\'image');
     }
@@ -115,6 +141,14 @@ export default function FileUpload({
           extractedText.trim().length > 0
             ? `Texte extrait trop court (${extractedText.trim().length} caractères) — probablement illisible. Essayez une photo plus nette ou un autre fichier.`
             : 'Aucun texte détecté dans le fichier.'
+        );
+      }
+
+      // Détection de texte corrompu (données binaires mal interprétées,
+      // souvent causé par une connexion internet trop lente pendant l'OCR)
+      if (isTextGarbage(extractedText)) {
+        throw new Error(
+          'Le texte extrait semble corrompu (souvent dû à une connexion internet lente pendant le traitement). Réessayez avec une meilleure connexion, ou collez le texte manuellement.'
         );
       }
 
