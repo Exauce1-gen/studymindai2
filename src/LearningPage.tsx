@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import FileUpload from './FileUpload';
-import { useUsageLimit, incrementFeatureUsage } from './useUsageLimit';
+import { useUsageLimit } from './useUsageLimit';
 import { usePremium } from './usePremium';
 import { renderMarkdown } from './markdownUtils';
 
@@ -108,7 +108,7 @@ function SummaryScreen() {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { canUse, usageCount, maxUsage, resetTime } = useUsageLimit('summary');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('summary');
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -171,7 +171,7 @@ Règles impératives :
       
       // Incrémenter l'utilisation si gratuit
       if (!isPremium && user) {
-        await incrementFeatureUsage(user.id, 'summary');
+        await incrementUsage();
       }
       
       setLoading(false);
@@ -354,7 +354,7 @@ function QuizScreen() {
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showResults, setShowResults] = useState(false);
 
-  const { canUse, usageCount, maxUsage, resetTime } = useUsageLimit('quiz');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('quiz');
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -415,7 +415,7 @@ function QuizScreen() {
 
         // Incrémenter l'utilisation si gratuit
         if (!isPremium && user) {
-          await incrementFeatureUsage(user.id, 'quiz');
+          await incrementUsage();
         }
       } else {
         throw new Error('Format invalide');
@@ -1052,7 +1052,7 @@ function ChatScreen() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { canUse, usageCount, maxUsage, resetTime } = useUsageLimit('chat');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('chat');
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -1110,7 +1110,7 @@ Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voic
 
       // Incrémenter l'utilisation si gratuit (1 message = 1 usage)
       if (!isPremium && user) {
-        await incrementFeatureUsage(user.id, 'chat');
+        await incrementUsage();
       }
 
       setLoading(false);
