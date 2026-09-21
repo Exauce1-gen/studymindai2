@@ -151,8 +151,9 @@ Règles impératives :
 2. ADAPTATION À LA MATIÈRE : identifie d'abord la matière du cours.
    - Mathématiques, Physique-Chimie, SVT : utilise les formules et notations précises quand elles sont pertinentes.
    - Français, Histoire-Géographie, Philosophie, Anglais, et autres matières littéraires : N'utilise PAS de formules. Explique avec du texte clair, des définitions précises et des exemples concrets.
-3. STRUCTURE : utilise des titres courts (## Titre) et des listes à puces (- point) pour les idées clés, sans surcharger.
-4. Ne répète jamais la même idée deux fois.`
+3. FORMULES SANS LATEX : n'utilise JAMAIS de syntaxe LaTeX (interdits : \\(, \\), \\[, \\], \\frac, \\mathbb, \\in, $, $$, etc.). Écris toujours les formules en texte simple lisible avec des caractères normaux/unicode : indices en toutes lettres ou collés (un, u0, un+1), puissances avec ^ ou unicode (q^n ou qⁿ), et symboles courants (×, ÷, ≤, ≥, √, π, ∈, →).
+4. STRUCTURE : utilise des titres courts (## Titre) et des listes à puces (- point) pour les idées clés, sans surcharger.
+5. Ne répète jamais la même idée deux fois.`
             },
             {
               role: 'user',
@@ -392,7 +393,7 @@ function QuizScreen() {
           messages: [
             {
               role: 'system',
-              content: 'Tu es un créateur de quiz pédagogiques. Génère des quiz au format JSON avec 10 questions QCM, 4 choix par question (A, B, C, D), et indique la bonne réponse.'
+              content: 'Tu es un créateur de quiz pédagogiques. Génère des quiz au format JSON avec 10 questions QCM, 4 choix par question (A, B, C, D), et indique la bonne réponse. Si une formule mathématique/scientifique est nécessaire, écris-la en texte simple lisible (jamais de syntaxe LaTeX comme \\(, \\frac, \\mathbb) : utilise des caractères normaux/unicode (un, q^n, ×, ÷, √, π, ≤, ≥).'
             },
             {
               role: 'user',
@@ -788,7 +789,7 @@ function ExamScreen() {
           messages: [
             {
               role: 'system',
-              content: 'Tu es un créateur d\'examens type BAC/BEPC. Génère des épreuves réalistes avec questions structurées.'
+              content: 'Tu es un créateur d\'examens type BAC/BEPC. Génère des épreuves réalistes avec questions structurées. Si une formule mathématique/scientifique est nécessaire, écris-la en texte simple lisible (jamais de syntaxe LaTeX comme \\(, \\frac, \\mathbb) : utilise des caractères normaux/unicode (un, q^n, ×, ÷, √, π, ≤, ≥).'
             },
             {
               role: 'user',
@@ -1092,6 +1093,8 @@ function ChatScreen() {
 Adapte ta réponse à la matière abordée :
 - Mathématiques, Physique-Chimie, SVT : utilise les formules et notations précises quand elles sont pertinentes.
 - Français, Histoire-Géographie, Philosophie, Anglais, et autres matières littéraires : n'utilise PAS de formules. Explique avec du texte clair, des exemples concrets et des définitions précises.
+
+FORMULES SANS LATEX : n'utilise JAMAIS de syntaxe LaTeX (interdits : \\(, \\), \\[, \\], \\frac, \\mathbb, \\in, $, $$, etc.). Écris toujours les formules en texte simple lisible avec des caractères normaux/unicode : indices en toutes lettres ou collés (un, u0, un+1), puissances avec ^ ou unicode (q^n ou qⁿ), et symboles courants (×, ÷, ≤, ≥, √, π, ∈, →).
 
 Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voici le cours de référence:\n${courseContent}` : 'Aide l\'étudiant avec ses questions.'}`
             },
