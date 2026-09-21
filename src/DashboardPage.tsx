@@ -30,8 +30,22 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
       minHeight: '100vh',
       background: '#07070f',
       color: '#e8e8f8',
-      fontFamily: 'system-ui'
+      fontFamily: 'system-ui',
+      overflowX: 'hidden'
     }}>
+      {/* Media query pour le header responsive */}
+      <style>{`
+        @media (max-width: 480px) {
+          .dash-grade-badge { display: none; }
+          .dash-btn-label { display: none; }
+          .dash-header-actions { gap: 8px !important; }
+          .dash-header-actions button {
+            padding: 8px 10px !important;
+            min-width: 34px;
+          }
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{
         padding: '18px 20px',
@@ -40,9 +54,10 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         background: 'rgba(7,7,15,0.95)',
-        backdropFilter: 'blur(12px)'
+        backdropFilter: 'blur(12px)',
+        gap: 8
       }}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: 12, minWidth: 0}}>
           <div style={{
             width: 40,
             height: 40,
@@ -51,29 +66,32 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 20
+            fontSize: 20,
+            flexShrink: 0
           }}>
             🧠
           </div>
-          <div style={{fontWeight: 800, fontSize: 19, letterSpacing: '-0.4px'}}>
+          <div style={{fontWeight: 800, fontSize: 19, letterSpacing: '-0.4px', whiteSpace: 'nowrap'}}>
             Study<span style={{color: '#6C5CE7'}}>Mind</span> AI
           </div>
         </div>
 
-        <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
-          <div style={{
+        <div className="dash-header-actions" style={{display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0}}>
+          <div className="dash-grade-badge" style={{
             background: 'rgba(108,92,231,0.12)',
             border: '1px solid rgba(108,92,231,0.3)',
             padding: '6px 14px',
             borderRadius: 20,
             fontSize: 11,
             fontWeight: 700,
-            color: '#6C5CE7'
+            color: '#6C5CE7',
+            whiteSpace: 'nowrap'
           }}>
             {userProfile.grade}
           </div>
           <button
             onClick={() => setShowPremium(true)}
+            title="Premium"
             style={{
               background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
               border: 'none',
@@ -83,13 +101,15 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
               fontWeight: 700,
               color: '#fff',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(108,92,231,0.3)'
+              boxShadow: '0 4px 12px rgba(108,92,231,0.3)',
+              whiteSpace: 'nowrap'
             }}
           >
-            ✨ Premium
+            ✨<span className="dash-btn-label"> Premium</span>
           </button>
           <button
             onClick={() => setShowSettings(true)}
+            title="Paramètres"
             style={{
               background: 'rgba(108,92,231,0.12)',
               border: '1px solid rgba(108,92,231,0.3)',
@@ -98,13 +118,15 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
               fontSize: 11,
               fontWeight: 700,
               color: '#6C5CE7',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
-            ⚙️ Paramètres
+            ⚙️<span className="dash-btn-label"> Paramètres</span>
           </button>
           <button
             onClick={signOut}
+            title="Déconnexion"
             style={{
               background: 'rgba(253,121,168,0.12)',
               border: '1px solid rgba(253,121,168,0.3)',
@@ -113,10 +135,11 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
               fontSize: 11,
               fontWeight: 700,
               color: '#fd79a8',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
-            Déconnexion
+            🚪<span className="dash-btn-label"> Déconnexion</span>
           </button>
         </div>
       </div>
