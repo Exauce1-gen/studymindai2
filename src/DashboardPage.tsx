@@ -4,6 +4,7 @@ import { useStats } from './useStats';
 import AdBanner, { AdSlots } from './AdBanner';
 import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
+import SettingsPage from './SettingsPage';
 
 interface DashboardPageProps {
   onStartLearning: () => void;
@@ -13,6 +14,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
   const { userProfile, signOut } = useAuth();
   const { stats, badges, loading: statsLoading, getAverageScore } = useStats();
   const [showPremium, setShowPremium] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!userProfile) return null;
 
@@ -85,6 +87,21 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             }}
           >
             ✨ Premium
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            style={{
+              background: 'rgba(108,92,231,0.12)',
+              border: '1px solid rgba(108,92,231,0.3)',
+              padding: '6px 14px',
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#6C5CE7',
+              cursor: 'pointer'
+            }}
+          >
+            ⚙️ Paramètres
           </button>
           <button
             onClick={signOut}
@@ -353,6 +370,44 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             ×
           </button>
           <PremiumPage />
+        </div>
+      )}
+
+      {/* Paramètres Modal */}
+      {showSettings && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 1000,
+          overflowY: 'auto'
+        }}>
+          <button
+            onClick={() => setShowSettings(false)}
+            style={{
+              position: 'fixed',
+              top: 20,
+              right: 20,
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              border: '1px solid #333',
+              background: '#1a1a2e',
+              color: '#e8e8f8',
+              fontSize: 20,
+              cursor: 'pointer',
+              zIndex: 1001,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ×
+          </button>
+          <SettingsPage />
         </div>
       )}
     </div>
