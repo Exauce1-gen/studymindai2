@@ -1,5 +1,30 @@
 import React from 'react';
 
+// Filet de sécurité : nettoie les résidus de syntaxe LaTeX si jamais l'IA
+// en génère malgré la consigne (ex: \(u_n\), \mathbb{N}, \frac{a}{b}).
+function stripLatexArtifacts(text: string): string {
+  return text
+    // \frac{a}{b} -> a/b
+    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2')
+    // \mathbb{N}, \mathbb N -> N
+    .replace(/\\mathbb\{?([A-Za-z])\}?/g, '$1')
+    // indices LaTeX : u_n -> un, u_{n+1} -> un+1
+    .replace(/([a-zA-Z])_\{([^{}]*)\}/g, '$1$2')
+    .replace(/([a-zA-Z])_([a-zA-Z0-9])/g, '$1$2')
+    // délimiteurs \( \) \[ \] $$ $ -> supprimés (le contenu reste)
+    .replace(/\\[()\[\]]/g, '')
+    .replace(/\$\$?/g, '')
+    // commandes restantes type \in, \times, \leq... -> symbole ou rien
+    .replace(/\\in\b/g, '∈')
+    .replace(/\\times\b/g, '×')
+    .replace(/\\div\b/g, '÷')
+    .replace(/\\leq\b/g, '≤')
+    .replace(/\\geq\b/g, '≥')
+    .replace(/\\sqrt\b/g, '√')
+    .replace(/\\pi\b/g, 'π')
+    .replace(/\\[a-zA-Z]+/g, ''); // toute autre commande LaTeX orpheline
+}
+
 // Rendu inline : gère **gras**, *italique*/_italique_, `code`
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
@@ -45,7 +70,8 @@ function renderInline(text: string): React.ReactNode[] {
 export function renderMarkdown(text: string): React.ReactNode {
   if (!text) return null;
 
-  const lines = text.split('\n');
+  const cleaned = stripLatexArtifacts(text);
+  const lines = cleaned.split('\n');
   const elements: React.ReactNode[] = [];
   let listItems: string[] = [];
   let listType: 'ul' | 'ol' | null = null;
