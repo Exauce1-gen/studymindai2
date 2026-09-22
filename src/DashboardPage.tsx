@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useStats } from './useStats';
 import AdBanner, { AdSlots } from './AdBanner';
@@ -16,6 +16,19 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
   const [showPremium, setShowPremium] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   if (!userProfile) return null;
 
@@ -40,14 +53,6 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           .dash-grade-badge { display: none; }
         }
       `}</style>
-
-      {/* Overlay pour fermer le menu au clic extérieur */}
-      {showMenu && (
-        <div
-          onClick={() => setShowMenu(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 998 }}
-        />
-      )}
 
       {/* Header */}
       <div style={{
@@ -113,7 +118,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           </button>
 
           {/* Menu hamburger : regroupe Paramètres + Déconnexion */}
-          <div style={{ position: 'relative' }}>
+          <div ref={menuRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setShowMenu(!showMenu)}
               title="Menu"
