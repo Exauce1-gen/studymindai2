@@ -15,6 +15,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
   const { stats, badges, loading: statsLoading, getAverageScore } = useStats();
   const [showPremium, setShowPremium] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   if (!userProfile) return null;
 
@@ -37,14 +38,16 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
       <style>{`
         @media (max-width: 480px) {
           .dash-grade-badge { display: none; }
-          .dash-btn-label { display: none; }
-          .dash-header-actions { gap: 8px !important; }
-          .dash-header-actions button {
-            padding: 8px 10px !important;
-            min-width: 34px;
-          }
         }
       `}</style>
+
+      {/* Overlay pour fermer le menu au clic extérieur */}
+      {showMenu && (
+        <div
+          onClick={() => setShowMenu(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+        />
+      )}
 
       {/* Header */}
       <div style={{
@@ -76,7 +79,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           </div>
         </div>
 
-        <div className="dash-header-actions" style={{display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0}}>
           <div className="dash-grade-badge" style={{
             background: 'rgba(108,92,231,0.12)',
             border: '1px solid rgba(108,92,231,0.3)',
@@ -89,15 +92,16 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           }}>
             {userProfile.grade}
           </div>
+
           <button
             onClick={() => setShowPremium(true)}
             title="Premium"
             style={{
               background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
               border: 'none',
-              padding: '6px 14px',
+              padding: '8px 16px',
               borderRadius: 20,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               color: '#fff',
               cursor: 'pointer',
@@ -105,42 +109,88 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
               whiteSpace: 'nowrap'
             }}
           >
-            ✨<span className="dash-btn-label"> Premium</span>
+            ✨ Premium
           </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            title="Paramètres"
-            style={{
-              background: 'rgba(108,92,231,0.12)',
-              border: '1px solid rgba(108,92,231,0.3)',
-              padding: '6px 14px',
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#6C5CE7',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            ⚙️<span className="dash-btn-label"> Paramètres</span>
-          </button>
-          <button
-            onClick={signOut}
-            title="Déconnexion"
-            style={{
-              background: 'rgba(253,121,168,0.12)',
-              border: '1px solid rgba(253,121,168,0.3)',
-              padding: '6px 14px',
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#fd79a8',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            🚪<span className="dash-btn-label"> Déconnexion</span>
-          </button>
+
+          {/* Menu hamburger : regroupe Paramètres + Déconnexion */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              title="Menu"
+              style={{
+                background: 'rgba(108,92,231,0.12)',
+                border: '1px solid rgba(108,92,231,0.3)',
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                fontSize: 16,
+                color: '#e8e8f8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 999
+              }}
+            >
+              ☰
+            </button>
+
+            {showMenu && (
+              <div style={{
+                position: 'absolute',
+                top: 46,
+                right: 0,
+                background: '#151526',
+                border: '1px solid #333',
+                borderRadius: 14,
+                overflow: 'hidden',
+                minWidth: 190,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                zIndex: 999
+              }}>
+                <button
+                  onClick={() => { setShowMenu(false); setShowSettings(true); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '1px solid #262638',
+                    color: '#e8e8f8',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10
+                  }}
+                >
+                  ⚙️ Paramètres
+                </button>
+                <button
+                  onClick={() => { setShowMenu(false); signOut(); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#fd79a8',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10
+                  }}
+                >
+                  🚪 Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
