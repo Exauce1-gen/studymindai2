@@ -4,6 +4,7 @@ import FileUpload from './FileUpload';
 import { useUsageLimit } from './useUsageLimit';
 import { usePremium } from './usePremium';
 import { renderMarkdown } from './markdownUtils';
+import { useStats } from './useStats';
 
 export default function LearningPage() {
   const { user, userProfile } = useAuth();
@@ -109,6 +110,7 @@ function SummaryScreen() {
   const [loading, setLoading] = useState(false);
   
   const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('summary');
+  const { incrementStat } = useStats();
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -169,7 +171,12 @@ Règles impératives :
       const generatedSummary = data.choices[0]?.message?.content || 'Erreur de génération';
       
       setSummary(generatedSummary);
-      
+
+      // Statistique : nombre de résumés créés
+      if (user) {
+        await incrementStat('summaries_count');
+      }
+
       // Incrémenter l'utilisation si gratuit
       if (!isPremium && user) {
         await incrementUsage();
@@ -356,6 +363,7 @@ function QuizScreen() {
   const [showResults, setShowResults] = useState(false);
 
   const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('quiz');
+  const { addQuizScore } = useStats();
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -444,6 +452,12 @@ function QuizScreen() {
 
   const submitQuiz = () => {
     setShowResults(true);
+
+    // Statistique : normaliser le score sur 20 (le quiz compte 10 questions)
+    const correct = calculateScore();
+    const total = quiz.questions.length || 1;
+    const score20 = Math.round((correct / total) * 20 * 10) / 10;
+    addQuizScore(score20, 20);
   };
 
   return (
@@ -710,6 +724,7 @@ function QuizScreen() {
 
 function ExamScreen() {
   const { isPremium } = usePremium();
+  const { addExamScore } = useStats();
   const [selectedSubject, setSelectedSubject] = useState('');
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -840,6 +855,11 @@ function ExamScreen() {
 
   const submitExam = () => {
     setShowResults(true);
+
+    // Statistique : normaliser le score sur 20
+    const { earnedPoints, totalPoints } = calculateScore();
+    const score20 = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 20 * 10) / 10 : 0;
+    addExamScore(score20, 20);
   };
 
   return (
