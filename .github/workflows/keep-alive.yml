@@ -2,22 +2,25 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # S'exécute vers 3h UTC les jours du mois multiples de 3 (~tous les 3 jours)
-    - cron: '0 3 */3 * *'
+    # Tous les jours à 4h UTC (marge de sécurité large avant les 7 jours d'inactivité)
+    - cron: '0 4 * * *'
   workflow_dispatch: {}
 
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST endpoint
+      - name: Requête réelle sur une table Supabase (compte comme activité)
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://josrvfcyweohpkfhfjbg.supabase.co/rest/v1/" \
+          STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            "https://josrvfcyweohpkfhfjbg.supabase.co/rest/v1/users?select=id&limit=1" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
           echo "Réponse Supabase: HTTP $STATUS"
-          if [ "$STATUS" -ge 500 ]; then
-            echo "⚠️ Supabase a répondu avec une erreur serveur ($STATUS)"
+          cat /tmp/response.json
+          echo ""
+          if [ "$STATUS" -ge 400 ]; then
+            echo "⚠️ Supabase a répondu avec une erreur ($STATUS) — le projet est peut-être en pause ou la clé est invalide"
             exit 1
           fi
+          echo "✅ Requête réussie, le projet reste actif"
