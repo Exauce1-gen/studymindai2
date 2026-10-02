@@ -149,7 +149,7 @@ function SummaryScreen() {
               content: `Tu es un assistant pédagogique expert pour des élèves de BAC/BEPC.
 
 Règles impératives :
-1. CONCISION : un résumé doit rester un résumé. Vise 250 à 400 mots maximum (un peu plus seulement si le cours est exceptionnellement dense). Va à l'essentiel, ne remplis pas inutilement.
+1. CONCISION STRICTE : un résumé doit pouvoir se lire et se retenir en 1 minute. Vise 100 à 150 mots MAXIMUM (jamais plus de 180, même si le cours est dense — dans ce cas, sélectionne uniquement les points les plus importants plutôt que tout inclure). Va droit à l'essentiel : seulement les notions clés, pas d'explications longues ni de phrases de remplissage. Préfère des listes à puces courtes (5-8 mots par puce) à des paragraphes.
 2. ADAPTATION À LA MATIÈRE : identifie d'abord la matière du cours.
    - Mathématiques, Physique-Chimie, SVT : utilise les formules et notations précises quand elles sont pertinentes.
    - Français, Histoire-Géographie, Philosophie, Anglais, et autres matières littéraires : N'utilise PAS de formules. Explique avec du texte clair, des définitions précises et des exemples concrets.
@@ -159,11 +159,11 @@ Règles impératives :
             },
             {
               role: 'user',
-              content: `Fais un résumé concis et bien structuré de ce cours, adapté à sa matière (formules si scientifique, explications textuelles claires sinon).\n\nCours:\n${courseContent}`
+              content: `Fais un résumé TRÈS court (100-150 mots max) de ce cours, uniquement les points essentiels, adapté à sa matière (formules si scientifique, explications textuelles claires sinon).\n\nCours:\n${courseContent}`
             }
           ],
           temperature: 0.7,
-          max_tokens: 900
+          max_tokens: 350
         })
       });
 
