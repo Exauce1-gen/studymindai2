@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { createClient, User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-// Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Client Supabase unique pour toute l'app (voir src/supabase.ts).
+// Ré-exporté ici pour ne pas casser les imports existants
+// (`import { supabase } from './AuthContext'`) ailleurs dans le code.
+export { supabase };
 
 interface UserProfile {
   id: string;

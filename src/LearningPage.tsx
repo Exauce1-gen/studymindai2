@@ -7,7 +7,11 @@ import { renderMarkdown } from './markdownUtils';
 import { useStats } from './useStats';
 import ShareScore from './Sharescore';
 
-export default function LearningPage() {
+interface LearningPageProps {
+  onBack: () => void;
+}
+
+export default function LearningPage({ onBack }: LearningPageProps) {
   const { user, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'summary' | 'quiz' | 'exam' | 'chat' | 'fiches' | 'planning'>('summary');
 
@@ -32,7 +36,7 @@ export default function LearningPage() {
         gap: 16
       }}>
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={onBack}
           style={{
             padding: '12px 24px',
             background: '#1a1a2e',

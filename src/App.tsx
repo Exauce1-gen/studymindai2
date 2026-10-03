@@ -67,7 +67,7 @@ function AppContent() {
 
   // 📚 Mode apprentissage
   if (showLearning) {
-    return <LearningPage />;
+    return <LearningPage onBack={() => setShowLearning(false)} />;
   }
 
   // 🏠 Dashboard principal
