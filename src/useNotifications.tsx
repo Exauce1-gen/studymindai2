@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext';
 
 export interface AppNotification {
   id: string;
-  type: 'badge' | 'maintenance' | 'update' | 'info';
+  type: 'badge' | 'maintenance' | 'update' | 'info' | 'streak';
   title: string;
   message: string;
   created_at: string;
@@ -16,6 +16,7 @@ const TYPE_ICONS: Record<AppNotification['type'], string> = {
   maintenance: '🔧',
   update: '🚀',
   info: 'ℹ️',
+  streak: '🔥',
 };
 
 export function notificationIcon(type: AppNotification['type']): string {
