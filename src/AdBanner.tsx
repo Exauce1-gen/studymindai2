@@ -33,7 +33,9 @@ export default function AdBanner({ slot, format = 'auto', style }: AdBannerProps
 
 // Slots de publicité prédéfinis
 export const AdSlots = {
-  DASHBOARD_TOP: '1234567890',      // À remplacer par vos vrais slots AdSense
-  LEARNING_SIDEBAR: '0987654321',   // À remplacer
-  RESULTS_BOTTOM: '1122334455',     // À remplacer
+  DASHBOARD_TOP: '9412249254',
+  // Pas encore créés dans AdSense — ces emplacements ne sont pas utilisés
+  // dans le code pour l'instant (aucun composant ne les référence).
+  LEARNING_SIDEBAR: '',
+  RESULTS_BOTTOM: '',
 };
