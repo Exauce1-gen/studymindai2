@@ -164,12 +164,13 @@ Règles impératives :
             }
           ],
           temperature: 0.7,
-          max_tokens: 350
+          max_tokens: 800
         })
       });
 
       const data = await response.json();
-      const generatedSummary = data.choices[0]?.message?.content || 'Erreur de génération';
+      const generatedSummary = data.choices[0]?.message?.content?.trim()
+        || 'Le résumé généré était vide. Réessaie, ou avec un texte de cours plus court.';
       
       setSummary(generatedSummary);
 
