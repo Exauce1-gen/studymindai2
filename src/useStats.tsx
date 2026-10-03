@@ -130,12 +130,32 @@ export function useStats() {
     setBadges(updatedBadges);
 
     // Sauvegarder les nouveaux badges débloqués
-    const newlyUnlocked = updatedBadges
-      .filter(b => b.unlocked && !currentStats.badges.includes(b.id))
-      .map(b => b.id);
+    const newlyUnlockedBadges = updatedBadges.filter(
+      b => b.unlocked && !currentStats.badges.includes(b.id)
+    );
 
-    if (newlyUnlocked.length > 0) {
-      saveBadges([...currentStats.badges, ...newlyUnlocked]);
+    if (newlyUnlockedBadges.length > 0) {
+      saveBadges([...currentStats.badges, ...newlyUnlockedBadges.map(b => b.id)]);
+      newlyUnlockedBadges.forEach(notifyBadgeUnlocked);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // NOTIFIER UN NOUVEAU BADGE DÉBLOQUÉ
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const notifyBadgeUnlocked = async (badge: { icon: string; name: string; description: string }) => {
+    if (!user) return;
+
+    try {
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'badge',
+        title: `Badge débloqué : ${badge.icon} ${badge.name}`,
+        message: badge.description,
+      });
+    } catch (error) {
+      console.error('Error creating badge notification:', error);
     }
   };
 

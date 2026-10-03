@@ -5,6 +5,7 @@ import AdBanner, { AdSlots } from './AdBanner';
 import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
 import SettingsPage from './SettingsPage';
+import NotificationBell from './NotificationBell';
 
 interface DashboardPageProps {
   onStartLearning: () => void;
@@ -116,6 +117,8 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           >
             ✨ Premium
           </button>
+
+          <NotificationBell />
 
           {/* Menu hamburger : regroupe Paramètres + Déconnexion */}
           <div ref={menuRef} style={{ position: 'relative' }}>
