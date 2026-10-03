@@ -168,7 +168,8 @@ Règles impératives :
             }
           ],
           temperature: 0.7,
-          max_tokens: 800
+          max_completion_tokens: 600,
+          reasoning_effort: 'low'
         })
       });
 
@@ -415,7 +416,8 @@ function QuizScreen() {
             }
           ],
           temperature: 0.8,
-          max_tokens: 2500
+          max_completion_tokens: 2500,
+          reasoning_effort: 'low'
         })
       });
 
@@ -825,7 +827,8 @@ function ExamScreen() {
             }
           ],
           temperature: 0.8,
-          max_tokens: 3000
+          max_completion_tokens: 3000,
+          reasoning_effort: 'low'
         })
       });
 
@@ -1143,7 +1146,8 @@ Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voic
             { role: 'user', content: input }
           ],
           temperature: 0.7,
-          max_tokens: 1500
+          max_completion_tokens: 1500,
+          reasoning_effort: 'low'
         })
       });
 
