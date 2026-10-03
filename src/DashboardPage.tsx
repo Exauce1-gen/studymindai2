@@ -99,25 +99,6 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             {userProfile.grade}
           </div>
 
-          <button
-            onClick={() => setShowPremium(true)}
-            title="Premium"
-            style={{
-              background: 'linear-gradient(135deg, #6C5CE7, #fd79a8)',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#fff',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(108,92,231,0.3)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            ✨ Premium
-          </button>
-
           <NotificationBell />
 
           {/* Menu hamburger : regroupe Paramètres + Déconnexion */}
@@ -157,6 +138,26 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                 zIndex: 999
               }}>
+                <button
+                  onClick={() => { setShowMenu(false); setShowPremium(true); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    background: 'linear-gradient(135deg, rgba(108,92,231,0.18), rgba(253,121,168,0.18))',
+                    border: 'none',
+                    borderBottom: '1px solid #262638',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 800,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10
+                  }}
+                >
+                  ✨ Premium
+                </button>
                 <button
                   onClick={() => { setShowMenu(false); setShowSettings(true); }}
                   style={{
