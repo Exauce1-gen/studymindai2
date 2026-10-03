@@ -5,6 +5,7 @@ import { useUsageLimit } from './useUsageLimit';
 import { usePremium } from './usePremium';
 import { renderMarkdown } from './markdownUtils';
 import { useStats } from './useStats';
+import ShareScore from './Sharescore';
 
 export default function LearningPage() {
   const { user, userProfile } = useAuth();
@@ -712,6 +713,13 @@ function QuizScreen() {
               </button>
             </div>
           )}
+          {showResults && (
+            <ShareScore
+              score={calculateScore()}
+              total={quiz.questions.length}
+              type="quiz"
+            />
+          )}
         </>
       )}
     </div>
@@ -1055,6 +1063,14 @@ function ExamScreen() {
                 🔄 Nouvel examen
               </button>
             </div>
+          )}
+          {showResults && (
+            <ShareScore
+              score={Math.round((calculateScore().earnedPoints / calculateScore().totalPoints) * 20 * 10) / 10}
+              total={20}
+              subject={subjects.find(s => s.id === selectedSubject)?.name}
+              type="exam"
+            />
           )}
         </>
       )}
