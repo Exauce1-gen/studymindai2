@@ -3,12 +3,31 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { Webhook } from 'fedapay';
 
 // Initialiser Supabase (côté serveur avec service_role key)
 const supabaseUrl = process.env.VITE_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Clé service_role (à ajouter dans Vercel)
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Nécessaire pour vérifier la signature : on a besoin du corps BRUT de la
+// requête (pas déjà parsé en JSON par Next.js), donc on désactive le
+// bodyParser automatique sur cette route.
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function getRawBody(req: NextApiRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,10 +38,30 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    console.log('🔔 Webhook FedaPay reçu:', JSON.stringify(req.body, null, 2));
+  // --- Vérification de la signature FedaPay (SÉCURITÉ CRITIQUE) ---
+  // Sans ça, n'importe qui connaissant cette URL pourrait s'activer Premium
+  // gratuitement en envoyant une fausse requête.
+  const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('❌ FEDAPAY_WEBHOOK_SECRET non configuré côté serveur');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
 
-    const { entity, event } = req.body;
+  const rawBody = await getRawBody(req);
+  const signature = req.headers['x-fedapay-signature'];
+
+  let verifiedEvent: any;
+  try {
+    verifiedEvent = Webhook.constructEvent(rawBody, signature, webhookSecret);
+  } catch (err: any) {
+    console.error('❌ Signature webhook invalide:', err.message);
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  try {
+    console.log('🔔 Webhook FedaPay reçu (signature vérifiée):', JSON.stringify(verifiedEvent, null, 2));
+
+    const { entity, event } = verifiedEvent;
 
     // Vérifier que c'est une transaction approuvée
     if (event !== 'transaction.approved') {
@@ -71,6 +110,18 @@ export default async function handler(
     }
 
     console.log('💎 Plan détecté:', planType, '- Valide jusqu\'au:', premiumUntil);
+
+    // 0. Vérifier qu'on n'a pas déjà traité cette transaction (FedaPay peut renvoyer le même webhook plusieurs fois)
+    const { data: existingTx } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('transaction_id', transactionId)
+      .limit(1);
+
+    if (existingTx && existingTx.length > 0) {
+      console.log('ℹ️ Transaction déjà traitée, on ignore:', transactionId);
+      return res.status(200).json({ message: 'Already processed', transactionId });
+    }
 
     // 1. Trouver l'utilisateur par email
     const { data: users, error: findError } = await supabase
