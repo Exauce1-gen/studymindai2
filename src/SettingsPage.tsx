@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './AuthContext';
 
@@ -38,6 +38,27 @@ export default function SettingsPage() {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [referralCount, setReferralCount] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const referralLink = userProfile?.referral_code
+    ? `${window.location.origin}/?ref=${userProfile.referral_code}`
+    : '';
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .eq('referred_by', user.id)
+      .then(({ count }) => setReferralCount(count ?? 0));
+  }, [user]);
+
+  const copyReferralLink = () => {
+    navigator.clipboard.writeText(referralLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
   const [error, setError] = useState('');
 
   const toggleSubject = (subject: string) => {
@@ -126,6 +147,59 @@ export default function SettingsPage() {
             Modifiez vos informations personnelles
           </p>
         </div>
+
+        {/* Parrainage */}
+        {userProfile?.referral_code && (
+          <div style={{
+            padding: 20,
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(108,92,231,0.12), rgba(253,121,168,0.12))',
+            border: '1px solid rgba(108,92,231,0.3)',
+            marginBottom: 24
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+              🎁 Invite tes amis
+            </div>
+            <div style={{ fontSize: 13, color: '#aaa', marginBottom: 14 }}>
+              7 jours de Premium offerts pour toi et ton ami dès qu'il termine son inscription.
+              {referralCount !== null && referralCount > 0 && (
+                <> &nbsp;Déjà <strong style={{ color: '#00b894' }}>{referralCount}</strong> ami{referralCount > 1 ? 's' : ''} parrainé{referralCount > 1 ? 's' : ''} !</>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{
+                flex: 1,
+                padding: '12px 14px',
+                background: '#0e0e1d',
+                border: '1px solid #333',
+                borderRadius: 10,
+                color: '#e8e8f8',
+                fontSize: 13,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {referralLink}
+              </div>
+              <button
+                onClick={copyReferralLink}
+                style={{
+                  padding: '12px 18px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: linkCopied ? '#00b894' : 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {linkCopied ? '✅ Copié' : '📋 Copier'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Email (lecture seule) */}
         <label style={{ display: 'block', color: '#aaa', fontSize: 14, marginBottom: 8 }}>

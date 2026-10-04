@@ -2,6 +2,18 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from './AuthContext';
 
+// Génère un code de parrainage court et lisible (évite 0/O et 1/I, ambigus)
+function generateReferralCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+const REFERRAL_BONUS_DAYS = 7;
+
 export default function OnboardingPage() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -58,9 +70,28 @@ export default function OnboardingPage() {
     }
     
     setLoading(true);
-    
+
     try {
-      const dataToUpdate = {
+      // Vérifier si un code de parrainage est en attente (venant d'un lien ?ref=XXXXXX)
+      const pendingCode = localStorage.getItem('pending_referral_code');
+      let referrer: { id: string; premium_until: string | null } | null = null;
+
+      if (pendingCode) {
+        const { data: referrerData } = await supabase
+          .from('users')
+          .select('id, premium_until')
+          .eq('referral_code', pendingCode)
+          .maybeSingle();
+
+        if (referrerData && referrerData.id !== user.id) {
+          referrer = referrerData;
+        }
+      }
+
+      const myReferralCode = generateReferralCode();
+      const now = new Date();
+
+      const dataToUpdate: any = {
         id: user.id,
         email: user.email,
         first_name: firstName,
@@ -68,29 +99,63 @@ export default function OnboardingPage() {
         grade: grade,
         subjects: subjects,
         onboarding_completed: true,
-        is_premium: false,
-        created_at: new Date().toISOString()
+        referral_code: myReferralCode,
+        created_at: now.toISOString()
       };
-      
+
+      if (referrer) {
+        // Bonus de bienvenue pour le filleul : Premium offert
+        const myPremiumUntil = new Date(now.getTime() + REFERRAL_BONUS_DAYS * 24 * 60 * 60 * 1000);
+        dataToUpdate.referred_by = referrer.id;
+        dataToUpdate.is_premium = true;
+        dataToUpdate.premium_until = myPremiumUntil.toISOString();
+      } else {
+        dataToUpdate.is_premium = false;
+      }
+
       // Utiliser upsert au lieu de vérifier puis insérer/mettre à jour
       const { error } = await supabase
         .from('users')
         .upsert(dataToUpdate, {
           onConflict: 'id'
         });
-      
+
       if (error) {
         console.error('Erreur upsert:', error);
         alert(`Erreur: ${error.message}`);
         setLoading(false);
         return;
       }
-      
+
+      // Récompenser le parrain + le notifier (une fois l'inscription du filleul confirmée)
+      if (referrer) {
+        const currentUntil = referrer.premium_until ? new Date(referrer.premium_until) : now;
+        const base = currentUntil > now ? currentUntil : now;
+        const referrerPremiumUntil = new Date(base.getTime() + REFERRAL_BONUS_DAYS * 24 * 60 * 60 * 1000);
+
+        await supabase
+          .from('users')
+          .update({
+            is_premium: true,
+            premium_until: referrerPremiumUntil.toISOString()
+          })
+          .eq('id', referrer.id);
+
+        await supabase.from('notifications').insert({
+          user_id: referrer.id,
+          type: 'info',
+          title: `🎉 Un ami a rejoint StudyMind AI grâce à toi !`,
+          message: `Tu as gagné ${REFERRAL_BONUS_DAYS} jours de Premium offerts.`,
+        });
+
+        localStorage.removeItem('pending_referral_code');
+      }
+
       // Attendre un peu avant de recharger
       setTimeout(() => {
         window.location.href = '/';
       }, 500);
-      
+
     } catch (error: any) {
       console.error('Erreur:', error);
       alert(`Erreur: ${error.message}`);

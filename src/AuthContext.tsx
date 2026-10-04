@@ -17,6 +17,9 @@ interface UserProfile {
   subjects?: string[];
   onboarding_completed: boolean;
   is_premium: boolean;
+  premium_until?: string;
+  referral_code?: string;
+  referred_by?: string;
   created_at: string;
 }
 
@@ -71,7 +74,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) throw error;
-      setUserProfile(data);
+
+      // Compte créé avant l'ajout du parrainage : générer son code rétroactivement
+      if (data && !data.referral_code) {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+
+        const { data: updated } = await supabase
+          .from('users')
+          .update({ referral_code: code })
+          .eq('id', userId)
+          .select()
+          .single();
+
+        setUserProfile(updated || data);
+      } else {
+        setUserProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {

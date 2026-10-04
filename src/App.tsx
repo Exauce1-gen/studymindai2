@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './LoginPage';
 import OnboardingPage from './OnboardingPage';
@@ -9,6 +9,16 @@ import PremiumPage from './PremiumPage';
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
   const [showLearning, setShowLearning] = useState(false);
+
+  // Capture le code de parrainage depuis l'URL (ex: ?ref=AB3K9F) et le garde
+  // en mémoire jusqu'à ce qu'une inscription se termine (voir OnboardingPage.tsx)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      localStorage.setItem('pending_referral_code', ref.toUpperCase());
+    }
+  }, []);
 
   // 🔄 Loading
   if (loading) {
