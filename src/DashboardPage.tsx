@@ -6,6 +6,7 @@ import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
 import SettingsPage from './SettingsPage';
 import NotificationBell from './NotificationBell';
+import InstallBanner from './InstallBanner';
 
 interface DashboardPageProps {
   onStartLearning: () => void;
@@ -492,6 +493,8 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           <SettingsPage />
         </div>
       )}
+
+      <InstallBanner />
     </div>
   );
 }
