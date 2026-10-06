@@ -335,7 +335,7 @@ export default function PremiumPage() {
           💎 Passez à la vitesse supérieure
         </div>
 
-        <h1 style={{
+        <h1 className="premium-hero-title" style={{
           fontSize: 64,
           fontWeight: 900,
           color: '#e8e8f8',
@@ -352,7 +352,7 @@ export default function PremiumPage() {
           </span>
         </h1>
 
-        <p style={{
+        <p className="premium-hero-subtitle" style={{
           fontSize: 22,
           color: '#aaa',
           maxWidth: 650,
@@ -673,8 +673,25 @@ export default function PremiumPage() {
         </div>
       </div>
 
+      {/* Responsive pour les zones à padding/grille fixes */}
+      <style>{`
+        @media (max-width: 640px) {
+          .premium-compare-card { padding: 20px !important; }
+          .premium-compare-grid { grid-template-columns: 1fr !important; }
+          .premium-cta-card { padding: 28px 20px !important; }
+          .premium-cta-title { font-size: 26px !important; }
+          .premium-cta-text { font-size: 15px !important; }
+          .premium-cta-button { padding: 16px 28px !important; font-size: 16px !important; }
+          .premium-hero-title { font-size: 36px !important; }
+          .premium-hero-subtitle { font-size: 17px !important; }
+        }
+        /* Empêche une colonne de grille de refuser de rétrécir sous la taille
+           naturelle de son contenu (cause classique de texte "coupé" en CSS Grid) */
+        .premium-compare-grid > div { min-width: 0; }
+      `}</style>
+
       {/* Comparaison Gratuit vs Premium */}
-      <div style={{
+      <div className="premium-compare-card" style={{
         maxWidth: 900,
         margin: '0 auto 60px',
         background: '#0e0e1d',
@@ -705,7 +722,7 @@ export default function PremiumPage() {
           Gratuit vs Premium 💎
         </h2>
 
-        <div style={{
+        <div className="premium-compare-grid" style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: 20
@@ -959,7 +976,9 @@ export default function PremiumPage() {
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 24px 80px rgba(108,92,231,0.5)'
-      }}>
+      }}
+      className="premium-cta-card"
+      >
         <div style={{
           position: 'absolute',
           top: -50,
@@ -971,7 +990,7 @@ export default function PremiumPage() {
           filter: 'blur(40px)'
         }} />
 
-        <h2 style={{
+        <h2 className="premium-cta-title" style={{
           fontSize: 40,
           fontWeight: 900,
           color: '#fff',
@@ -982,7 +1001,7 @@ export default function PremiumPage() {
           Prêt à CARTONNER ? 🔥
         </h2>
 
-        <p style={{
+        <p className="premium-cta-text" style={{
           fontSize: 19,
           color: '#fff',
           opacity: 0.95,
@@ -997,6 +1016,7 @@ export default function PremiumPage() {
 
         <button
           onClick={handleSubscribe}
+          className="premium-cta-button"
           style={{
             padding: '20px 48px',
             background: '#fff',
