@@ -49,12 +49,23 @@ export default function InstallBanner() {
   };
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
+    if (!deferredPrompt) {
+      setShow(false);
+      return;
     }
-    dismiss();
+
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+
+    if (choice.outcome === 'accepted') {
+      // Vraiment installée : on ne la montre plus jamais.
+      dismiss();
+    } else {
+      // Annulée par l'utilisateur dans la fenêtre native : on masque juste
+      // pour cette visite, elle réapparaîtra au prochain passage sur le Dashboard.
+      setShow(false);
+    }
   };
 
   if (!show) return null;
