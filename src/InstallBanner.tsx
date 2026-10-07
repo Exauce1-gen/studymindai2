@@ -43,14 +43,19 @@ export default function InstallBanner() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  const dismiss = () => {
+  // Fermeture temporaire : masque juste pour cette visite (croix, ou prompt annulé).
+  // Réapparaîtra au prochain passage sur le Dashboard.
+  const hideForNow = () => setShow(false);
+
+  // Fermeture définitive : uniquement quand l'app est réellement installée.
+  const dismissForever = () => {
     setShow(false);
     localStorage.setItem(DISMISS_KEY, 'true');
   };
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      setShow(false);
+      hideForNow();
       return;
     }
 
@@ -59,12 +64,9 @@ export default function InstallBanner() {
     setDeferredPrompt(null);
 
     if (choice.outcome === 'accepted') {
-      // Vraiment installée : on ne la montre plus jamais.
-      dismiss();
+      dismissForever();
     } else {
-      // Annulée par l'utilisateur dans la fenêtre native : on masque juste
-      // pour cette visite, elle réapparaîtra au prochain passage sur le Dashboard.
-      setShow(false);
+      hideForNow();
     }
   };
 
@@ -136,7 +138,7 @@ export default function InstallBanner() {
       )}
 
       <button
-        onClick={dismiss}
+        onClick={hideForNow}
         aria-label="Fermer"
         style={{
           background: 'none',
