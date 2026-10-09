@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useStats } from './useStats';
-import AdBanner, { AdSlots } from './AdBanner';
+import AdFrame from './AdFrame';
+import SponsoredLink from './SponsoredLink';
 import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
 import SettingsPage from './SettingsPage';
@@ -275,9 +276,6 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           </div>
         </div>
 
-        {/* Publicité AdSense */}
-        <AdBanner slot={AdSlots.DASHBOARD_TOP} format="horizontal" />
-
         {/* Main CTA */}
         <div style={{
           background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
@@ -342,6 +340,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             ))}
           </div>
         </div>
+
+        {/* Publicité (plan gratuit uniquement) */}
+        <AdFrame kind="banner" />
 
         {/* Statistiques détaillées */}
         {stats && (
@@ -416,6 +417,10 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
 
         {/* Badges */}
         <BadgeDisplay badges={badges} />
+
+        {/* Publicités du bas (plan gratuit uniquement) */}
+        <AdFrame kind="native" />
+        <SponsoredLink />
       </div>
 
       {/* Premium Modal */}

@@ -54,6 +54,7 @@ export default function PremiumPage() {
         '🎯 Quiz illimités',
         '📝 Examens complets type BAC/BEPC',
         '💬 Chat IA illimité',
+        '🚫 Sans publicité',
         '📋 Fiches de révision illimitées',
         '📅 Planning personnalisé',
         '🚀 Accès prioritaire'
@@ -71,6 +72,7 @@ export default function PremiumPage() {
         '🎯 Quiz illimités',
         '📝 Examens complets type BAC/BEPC',
         '💬 Chat IA illimité',
+        '🚫 Sans publicité',
         '📋 Fiches de révision illimitées',
         '📅 Planning personnalisé',
         '🚀 Accès prioritaire',
