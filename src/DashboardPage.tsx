@@ -278,6 +278,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           </div>
         </div>
 
+        {/* Publicité avant le CTA (plan gratuit uniquement) */}
+        <AdBanner300x250 />
+
         {/* Main CTA */}
         <div style={{
           background: 'linear-gradient(135deg, #6C5CE7, #8b5cf6)',
@@ -416,6 +419,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
             </div>
           </div>
         )}
+
+        {/* Publicité avant les badges (plan gratuit uniquement) */}
+        <AdBanner300x250 />
 
         {/* Badges */}
         <BadgeDisplay badges={badges} />
