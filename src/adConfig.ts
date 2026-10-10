@@ -1,8 +1,9 @@
 // Lien direct Monetag
 export const MONETAG_LINK = 'https://uplcm.com/4/11986460';
 
-// Majeur selon la date de naissance du profil. Date inconnue → false (choix prudent).
-export function isAdult(dateOfBirth?: string): boolean {
+// Âge minimal atteint selon la date de naissance du profil.
+// Date inconnue ou invalide → false (choix prudent : on ne montre rien).
+export function isAtLeast(dateOfBirth: string | undefined, minAge: number): boolean {
   if (!dateOfBirth) return false;
   const dob = new Date(dateOfBirth);
   if (isNaN(dob.getTime())) return false;
@@ -10,5 +11,7 @@ export function isAdult(dateOfBirth?: string): boolean {
   let age = now.getFullYear() - dob.getFullYear();
   const m = now.getMonth() - dob.getMonth();
   if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-  return age >= 18;
+  return age >= minAge;
 }
+
+export const isAdult = (dateOfBirth?: string) => isAtLeast(dateOfBirth, 18);

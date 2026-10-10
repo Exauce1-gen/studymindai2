@@ -1,18 +1,24 @@
 import { useEffect } from 'react';
 import { usePremium } from './usePremium';
+import { useAuth } from './AuthContext';
+import { isAtLeast } from './adConfig';
 
+const SOCIAL_BAR_MIN_AGE = 14;
 const SOCIAL_BAR_SRC = 'https://bicea.org/14/d8ac18defb40695bf28d159340af79fe';
 
 /**
  * Adsterra Social Bar. Le script ajoute ses éléments directement dans <body> :
  * on les suit pour pouvoir les retirer quand le composant disparaît
  * (abonné Premium, ouverture d'un écran de paiement/paramètres, changement d'écran).
+ * Réservée aux utilisateurs de 14 ans et plus (date de naissance du profil).
  */
 export default function AdSocialBar() {
   const { isPremium, loading } = usePremium();
+  const { userProfile } = useAuth();
+  const eligible = isAtLeast(userProfile?.date_of_birth, SOCIAL_BAR_MIN_AGE);
 
   useEffect(() => {
-    if (loading || isPremium) return;
+    if (loading || isPremium || !eligible) return;
 
     const added: Node[] = [];
     const script = document.createElement('script');
@@ -34,7 +40,7 @@ export default function AdSocialBar() {
       script.remove();
       added.forEach((n) => n.parentNode && n.parentNode.removeChild(n));
     };
-  }, [loading, isPremium]);
+  }, [loading, isPremium, eligible]);
 
   return null;
 }
