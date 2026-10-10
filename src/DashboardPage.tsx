@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useStats } from './useStats';
-import AdFrame from './AdFrame';
+import AdBanner300x250 from './AdBanner300x250';
+import AdNativeBanner from './AdNativeBanner';
+import AdSocialBar from './AdSocialBar';
 import SponsoredLink from './SponsoredLink';
 import BadgeDisplay from './BadgeDisplay';
 import PremiumPage from './PremiumPage';
@@ -342,7 +344,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
         </div>
 
         {/* Publicité (plan gratuit uniquement) */}
-        <AdFrame kind="banner" />
+        <AdBanner300x250 />
 
         {/* Statistiques détaillées */}
         {stats && (
@@ -419,7 +421,7 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
         <BadgeDisplay badges={badges} />
 
         {/* Publicités du bas (plan gratuit uniquement) */}
-        <AdFrame kind="native" />
+        <AdNativeBanner />
         <SponsoredLink />
       </div>
 
@@ -498,6 +500,9 @@ export default function DashboardPage({ onStartLearning }: DashboardPageProps) {
           <SettingsPage />
         </div>
       )}
+
+      {/* Social Bar : comptes gratuits uniquement, masquée pendant Premium/Paramètres */}
+      {!showPremium && !showSettings && <AdSocialBar />}
 
       <InstallBanner />
     </div>

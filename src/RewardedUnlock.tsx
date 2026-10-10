@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
-import AdFrame from './AdFrame';
+import AdBanner300x250 from './AdBanner300x250';
 import { MONETAG_LINK, isAdult } from './adConfig';
 
 const WAIT_SECONDS = 30;
@@ -208,7 +208,7 @@ export default function RewardedUnlock({ label, onGrant }: Props) {
                     </a>
                   </>
                 ) : (
-                  <AdFrame kind="banner" />
+                  <AdBanner300x250 />
                 )}
               </>
             ) : (
