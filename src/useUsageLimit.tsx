@@ -9,6 +9,7 @@ interface UsageLimit {
   resetTime: string;
   loading: boolean;
   incrementUsage: () => Promise<void>;
+  grantBonus: () => Promise<void>;
 }
 
 export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat'): UsageLimit {
@@ -96,6 +97,34 @@ export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat')
     }
   };
 
+  // Bonus (pub regardée) : retire 1 utilisation du compteur du jour, sans passer sous 0.
+  const grantBonus = async () => {
+    if (!user || isPremium) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data: existing } = await supabase
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('feature_type', featureType)
+        .eq('date', today)
+        .single();
+
+      if (existing && existing.usage_count > 0) {
+        await supabase
+          .from('user_usage')
+          .update({ usage_count: existing.usage_count - 1 })
+          .eq('id', existing.id);
+      }
+
+      setUsageCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error granting bonus:', error);
+    }
+  };
+
   const getResetTime = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -109,7 +138,8 @@ export function useUsageLimit(featureType: 'summary' | 'quiz' | 'exam' | 'chat')
     maxUsage: MAX_FREE_USAGE,
     resetTime: getResetTime(),
     loading,
-    incrementUsage
+    incrementUsage,
+    grantBonus
   };
 }
 

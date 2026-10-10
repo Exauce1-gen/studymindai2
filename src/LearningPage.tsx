@@ -6,6 +6,7 @@ import { usePremium } from './usePremium';
 import { renderMarkdown } from './markdownUtils';
 import { useStats } from './useStats';
 import ShareScore from './Sharescore';
+import RewardedUnlock from './RewardedUnlock';
 
 interface LearningPageProps {
   onBack: () => void;
@@ -114,7 +115,7 @@ function SummaryScreen() {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('summary');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage, grantBonus } = useUsageLimit('summary');
   const { incrementStat } = useStats();
   const { isPremium } = usePremium();
 
@@ -268,6 +269,7 @@ Règles impératives :
           <div style={{ fontSize: 14, color: '#aaa', marginBottom: 20 }}>
             Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
           </div>
+          <RewardedUnlock label="résumé" onGrant={grantBonus} />
           <button
             onClick={() => window.location.href = '/premium'}
             style={{
@@ -369,7 +371,7 @@ function QuizScreen() {
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
   const [showResults, setShowResults] = useState(false);
 
-  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('quiz');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage, grantBonus } = useUsageLimit('quiz');
   const { addQuizScore } = useStats();
   const { isPremium } = usePremium();
 
@@ -539,6 +541,7 @@ function QuizScreen() {
             <div style={{ fontSize: 14, color: '#aaa', marginBottom: 20 }}>
               Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
             </div>
+            <RewardedUnlock label="quiz" onGrant={grantBonus} />
             <button
               onClick={() => window.location.href = '/premium'}
               style={{
@@ -1097,7 +1100,7 @@ function ChatScreen() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { canUse, usageCount, maxUsage, resetTime, incrementUsage } = useUsageLimit('chat');
+  const { canUse, usageCount, maxUsage, resetTime, incrementUsage, grantBonus } = useUsageLimit('chat');
   const { isPremium } = usePremium();
 
   const handleFileUpload = (extractedText: string) => {
@@ -1279,6 +1282,7 @@ Sois clair et concis, va droit au but sans te répéter. ${courseContent ? `Voic
           <div style={{ fontSize: 14, color: '#aaa', marginBottom: 18 }}>
             Réinitialisation à {resetTime}, ou passez à Premium pour continuer maintenant.
           </div>
+          <RewardedUnlock label="message" onGrant={grantBonus} />
           <button
             onClick={() => window.location.href = '/premium'}
             style={{
