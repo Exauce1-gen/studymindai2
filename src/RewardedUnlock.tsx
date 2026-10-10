@@ -4,23 +4,23 @@ import { supabase } from './supabase';
 import { MONETAG_LINK } from './adConfig';
 
 const WAIT_SECONDS = 30;
-const MAX_BONUS_PER_DAY = 2;
+const MAX_BONUS_PER_DAY = 2; // par fonction (résumé, quiz, chat) et par jour
 const PENDING_MAX_AGE_MS = 60 * 60 * 1000; // une demande de bonus expire après 1 h
 
 // ---- Compteur de bonus du jour (stocké dans le navigateur) ----
-function countKey(userId?: string) {
-  return `bonus_${userId}_${new Date().toISOString().split('T')[0]}`;
+function countKey(userId: string | undefined, label: string) {
+  return `bonus_${userId}_${label}_${new Date().toISOString().split('T')[0]}`;
 }
-function bonusUsed(userId?: string): number {
+function bonusUsed(userId: string | undefined, label: string): number {
   try {
-    return parseInt(localStorage.getItem(countKey(userId)) || '0', 10) || 0;
+    return parseInt(localStorage.getItem(countKey(userId, label)) || '0', 10) || 0;
   } catch {
     return 0;
   }
 }
-function addBonusUsed(userId?: string) {
+function addBonusUsed(userId: string | undefined, label: string) {
   try {
-    localStorage.setItem(countKey(userId), String(bonusUsed(userId) + 1));
+    localStorage.setItem(countKey(userId, label), String(bonusUsed(userId, label) + 1));
   } catch {
     /* stockage indisponible : sans conséquence */
   }
@@ -81,8 +81,8 @@ export default function RewardedUnlock({ label, onGrant }: Props) {
   const remaining = Math.max(0, MAX_BONUS_PER_DAY - used);
 
   useEffect(() => {
-    setUsed(bonusUsed(uid));
-  }, [uid]);
+    setUsed(bonusUsed(uid, label));
+  }, [uid, label]);
 
   // Crédite le bonus (une seule fois : la demande en cours sert de jeton).
   const grant = async (announce: boolean) => {
@@ -92,10 +92,10 @@ export default function RewardedUnlock({ label, onGrant }: Props) {
     const pending = readPending(uid);
     clearPending(uid);
     if (!pending) return; // déjà crédité
-    if (bonusUsed(uid) >= MAX_BONUS_PER_DAY) return;
+    if (bonusUsed(uid, label) >= MAX_BONUS_PER_DAY) return;
 
-    addBonusUsed(uid);
-    setUsed(bonusUsed(uid));
+    addBonusUsed(uid, label);
+    setUsed(bonusUsed(uid, label));
     setOpen(false);
     await onGrant();
 
@@ -199,7 +199,7 @@ export default function RewardedUnlock({ label, onGrant }: Props) {
           </>
         ) : (
           <div style={{ fontSize: 13, color: '#888' }}>
-            Tu as utilisé tes {MAX_BONUS_PER_DAY} bonus du jour. Reviens demain ou passe à Premium.
+            Tu as utilisé tes {MAX_BONUS_PER_DAY} bonus {label === 'quiz' ? 'quiz' : label + 's'} du jour. Reviens demain ou passe à Premium.
           </div>
         )}
       </div>
