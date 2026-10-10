@@ -5,6 +5,7 @@ import OnboardingPage from './OnboardingPage';
 import DashboardPage from './DashboardPage';
 import LearningPage from './LearningPage';
 import PremiumPage from './PremiumPage';
+import { useDailyActivity } from './useDailyActivity';
 
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
@@ -19,6 +20,9 @@ function AppContent() {
       localStorage.setItem('pending_referral_code', ref.toUpperCase());
     }
   }, []);
+
+  // Suivi des utilisateurs actifs par jour (une ligne par utilisateur et par jour)
+  useDailyActivity(user?.id, userProfile?.onboarding_completed, userProfile?.is_premium);
 
   // 🔄 Loading
   if (loading) {
